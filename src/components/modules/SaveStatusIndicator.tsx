@@ -50,8 +50,8 @@ export function SaveStatusIndicator({
     saving: {
       icon: Loader2,
       text: 'Saving...',
-      className: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400',
-      iconClassName: 'text-amber-600 dark:text-amber-500',
+      className: 'bg-islamic-gold/10 dark:bg-islamic-gold/20 text-islamic-gold dark:text-islamic-gold',
+      iconClassName: 'text-islamic-gold dark:text-islamic-gold',
     },
     saved: {
       icon: CheckCircle2,

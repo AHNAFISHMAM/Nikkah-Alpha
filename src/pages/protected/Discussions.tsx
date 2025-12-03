@@ -390,7 +390,7 @@ export function Discussions() {
             {isLoading && displayPrompts.length === 0 && user ? (
               <Card>
                 <CardContent className="py-16 sm:py-20 text-center">
-                  <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-primary mx-auto mb-4 sm:mb-5" />
+                  <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-islamic-gold mx-auto mb-4 sm:mb-5" />
                   <p className="text-muted-foreground text-sm sm:text-base">Loading discussions...</p>
                 </CardContent>
               </Card>

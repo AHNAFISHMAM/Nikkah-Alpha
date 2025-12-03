@@ -575,7 +575,7 @@ export function Resources() {
                                       aria-pressed={isFavorite}
                                     >
                                       {toggleFavoriteMutation.isPending ? (
-                                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary" />
+                                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-islamic-gold" />
                                       ) : (
                                         <Star className={cn(
                                           "h-5 w-5 sm:h-6 sm:w-6 transition-all duration-200",
