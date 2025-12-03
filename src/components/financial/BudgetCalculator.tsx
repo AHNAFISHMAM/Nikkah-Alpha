@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { memo, useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -47,7 +47,7 @@ interface BudgetData {
   expense_charity: number
 }
 
-export function BudgetCalculator() {
+export const BudgetCalculator = memo(function BudgetCalculator() {
   const { data: budgetData, isLoading } = useBudget()
   const updateMutation = useUpdateBudget()
   const { isMobile, isTablet } = useViewport()
@@ -479,5 +479,5 @@ export function BudgetCalculator() {
       </CardContent>
     </Card>
   )
-}
+})
 

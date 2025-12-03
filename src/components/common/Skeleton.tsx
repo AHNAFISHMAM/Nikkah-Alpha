@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { cn } from '../../lib/utils'
 
 interface SkeletonProps {
@@ -8,26 +9,28 @@ interface SkeletonProps {
   animation?: 'pulse' | 'wave' | 'none'
 }
 
-export function Skeleton({
+// Extract constants to prevent recreation
+const BASE_STYLES = 'bg-neutral-200 dark:bg-neutral-800'
+
+const VARIANT_STYLES = {
+  text: 'rounded',
+  circular: 'rounded-full',
+  rectangular: 'rounded-lg',
+} as const
+
+const ANIMATION_STYLES = {
+  pulse: 'animate-pulse',
+  wave: 'animate-[wave_1.6s_ease-in-out_infinite]',
+  none: '',
+} as const
+
+export const Skeleton = memo(function Skeleton({
   className,
   variant = 'rectangular',
   width,
   height,
   animation = 'pulse',
 }: SkeletonProps) {
-  const baseStyles = 'bg-neutral-200 dark:bg-neutral-800'
-  
-  const variantStyles = {
-    text: 'rounded',
-    circular: 'rounded-full',
-    rectangular: 'rounded-lg',
-  }
-
-  const animationStyles = {
-    pulse: 'animate-pulse',
-    wave: 'animate-[wave_1.6s_ease-in-out_infinite]',
-    none: '',
-  }
 
   const style: React.CSSProperties = {}
   if (width) style.width = typeof width === 'number' ? `${width}px` : width
@@ -36,20 +39,20 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        baseStyles,
-        variantStyles[variant],
-        animationStyles[animation],
+        BASE_STYLES,
+        VARIANT_STYLES[variant],
+        ANIMATION_STYLES[animation],
         className
       )}
       style={style}
     />
   )
-}
+})
 
 /**
  * Skeleton components for common UI patterns
  */
-export function SkeletonCard() {
+export const SkeletonCard = memo(function SkeletonCard() {
   return (
     <div className="p-5 space-y-4 border border-neutral-200 rounded-xl">
       <div className="flex items-center gap-3">
@@ -63,9 +66,9 @@ export function SkeletonCard() {
       <Skeleton variant="text" height={16} width="80%" />
     </div>
   )
-}
+})
 
-export function SkeletonList({ count = 3 }: { count?: number }) {
+export const SkeletonList = memo(function SkeletonList({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -73,9 +76,9 @@ export function SkeletonList({ count = 3 }: { count?: number }) {
       ))}
     </div>
   )
-}
+})
 
-export function SkeletonGrid({ count = 6 }: { count?: number }) {
+export const SkeletonGrid = memo(function SkeletonGrid({ count = 6 }: { count?: number }) {
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -83,5 +86,5 @@ export function SkeletonGrid({ count = 6 }: { count?: number }) {
       ))}
     </div>
   )
-}
+})
 

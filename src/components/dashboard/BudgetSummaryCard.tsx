@@ -1,10 +1,9 @@
+import { memo, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { DollarSign, ArrowRight, TrendingUp } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card'
+import { DollarSign, ArrowRight } from 'lucide-react'
+import { Card, CardTitle, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
-import { Progress } from '../ui/Progress'
-import { cn } from '../../lib/utils'
 
 interface BudgetSummaryCardProps {
   hasBudget: boolean
@@ -12,12 +11,23 @@ interface BudgetSummaryCardProps {
   isLoading?: boolean
 }
 
-export function BudgetSummaryCard({ hasBudget, budgetAmount, isLoading }: BudgetSummaryCardProps) {
+// Extract constants to prevent recreation
+const CARD_ANIMATION = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: 0.3 },
+} as const
+
+export const BudgetSummaryCard = memo(function BudgetSummaryCard({ hasBudget, budgetAmount, isLoading }: BudgetSummaryCardProps) {
+  // Memoize formatted amount to prevent recalculation
+  const formattedAmount = useMemo(() => {
+    return budgetAmount ? budgetAmount.toLocaleString() : ''
+  }, [budgetAmount])
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
+      initial={CARD_ANIMATION.initial}
+      animate={CARD_ANIMATION.animate}
+      transition={CARD_ANIMATION.transition}
     >
       <Card padding="none" className="overflow-hidden">
         <div className="bg-gradient-to-r from-green-500/10 via-green-400/5 to-green-600/10 dark:from-green-500/20 dark:via-green-400/10 dark:to-green-600/20 px-6 py-5 sm:px-8 sm:py-6 border-b border-border">
@@ -52,7 +62,7 @@ export function BudgetSummaryCard({ hasBudget, budgetAmount, isLoading }: Budget
             <div className="space-y-4 sm:space-y-5">
               <div>
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                  ${budgetAmount.toLocaleString()}
+                  ${formattedAmount}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Total budget allocated
@@ -95,5 +105,5 @@ export function BudgetSummaryCard({ hasBudget, budgetAmount, isLoading }: Budget
       </Card>
     </motion.div>
   )
-}
+})
 

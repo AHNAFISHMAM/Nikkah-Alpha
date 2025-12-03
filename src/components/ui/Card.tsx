@@ -3,6 +3,21 @@ export * from './Card'
 import { forwardRef, type HTMLAttributes } from 'react'
 import { cn } from '../../lib/utils'
 
+// Extract constants to prevent recreation
+const CARD_VARIANTS = {
+  default: 'bg-card text-card-foreground shadow-sm border border-border dark:bg-card dark:text-card-foreground dark:border-border',
+  elevated: 'bg-card text-card-foreground shadow-lg dark:bg-card dark:text-card-foreground dark:shadow-xl',
+  outlined: 'bg-card text-card-foreground border-2 border-border dark:bg-card dark:text-card-foreground dark:border-border',
+  filled: 'bg-secondary text-secondary-foreground dark:bg-secondary dark:text-secondary-foreground',
+} as const
+
+const CARD_PADDINGS = {
+  none: '',
+  sm: 'p-3',
+  md: 'p-4 sm:p-6',
+  lg: 'p-6 sm:p-8',
+} as const
+
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'outlined' | 'filled'
   padding?: 'none' | 'sm' | 'md' | 'lg'
@@ -21,27 +36,13 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     },
     ref
   ) => {
-    const variants = {
-      default: 'bg-card text-card-foreground shadow-sm border border-border dark:bg-card dark:text-card-foreground dark:border-border',
-      elevated: 'bg-card text-card-foreground shadow-lg dark:bg-card dark:text-card-foreground dark:shadow-xl',
-      outlined: 'bg-card text-card-foreground border-2 border-border dark:bg-card dark:text-card-foreground dark:border-border',
-      filled: 'bg-secondary text-secondary-foreground dark:bg-secondary dark:text-secondary-foreground',
-    }
-
-    const paddings = {
-      none: '',
-      sm: 'p-3',
-      md: 'p-4 sm:p-6',
-      lg: 'p-6 sm:p-8',
-    }
-
     return (
       <div
         ref={ref}
         className={cn(
           'rounded-2xl',
-          variants[variant],
-          paddings[padding],
+          CARD_VARIANTS[variant],
+          CARD_PADDINGS[padding],
           interactive && 'cursor-pointer transition-all duration-200 hover:shadow-md dark:hover:shadow-lg active:scale-[0.99]',
           className
         )}

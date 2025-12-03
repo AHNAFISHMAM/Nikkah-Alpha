@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { memo, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -15,15 +15,23 @@ export interface DialogProps {
   icon?: React.ReactNode
 }
 
-const maxWidthClasses = {
+// Extract constants to prevent recreation
+const MAX_WIDTH_CLASSES = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
-}
+} as const
 
-export function Dialog({
+const DIALOG_ANIMATION = {
+  initial: { opacity: 0, scale: 0.95, y: 20 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: 20 },
+  transition: { duration: 0.2 },
+} as const
+
+export const Dialog = memo(function Dialog({
   isOpen,
   onClose,
   title,
@@ -94,31 +102,33 @@ export function Dialog({
     }
   }, [isOpen])
 
+  // Memoize callback to prevent recreation
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }, [onClose])
+
   // Handle ESC key to close
   useEffect(() => {
     if (!isOpen) return
 
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
+  }, [isOpen, handleEscape])
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose()
     }
-  }
+  }, [onClose])
+
+  // Memoize IDs to prevent recalculation
+  const dialogId = useMemo(() => `dialog-${title.toLowerCase().replace(/\s+/g, '-')}`, [title])
+  const titleId = useMemo(() => `${dialogId}-title`, [dialogId])
+  const descriptionId = useMemo(() => description ? `${dialogId}-description` : undefined, [dialogId, description])
 
   if (!isOpen) return null
-
-  const dialogId = `dialog-${title.toLowerCase().replace(/\s+/g, '-')}`
-  const titleId = `${dialogId}-title`
-  const descriptionId = `${dialogId}-description`
 
   return (
     <AnimatePresence>
@@ -132,14 +142,14 @@ export function Dialog({
       >
         <motion.div
           ref={dialogRef}
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.2 }}
+          initial={DIALOG_ANIMATION.initial}
+          animate={DIALOG_ANIMATION.animate}
+          exit={DIALOG_ANIMATION.exit}
+          transition={DIALOG_ANIMATION.transition}
           className={cn(
             'bg-card border border-border rounded-2xl w-full shadow-xl',
             'max-h-[90vh] overflow-hidden flex flex-col',
-            maxWidthClasses[maxWidth],
+            MAX_WIDTH_CLASSES[maxWidth],
             className
           )}
           onClick={(e) => e.stopPropagation()}
@@ -190,5 +200,5 @@ export function Dialog({
       </div>
     </AnimatePresence>
   )
-}
+})
 

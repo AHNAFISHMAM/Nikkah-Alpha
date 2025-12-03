@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { memo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card'
 import { cn } from '../../lib/utils'
+
+// Extract constants to prevent recreation
+const COLLAPSE_ANIMATION = {
+  initial: { height: 0, opacity: 0 },
+  animate: { height: 'auto', opacity: 1 },
+  exit: { height: 0, opacity: 0 },
+  transition: { duration: 0.3, ease: 'easeInOut' },
+} as const
 
 interface CollapsibleSectionProps {
   title: string
@@ -14,7 +22,7 @@ interface CollapsibleSectionProps {
   headerClassName?: string
 }
 
-export function CollapsibleSection({
+export const CollapsibleSection = memo(function CollapsibleSection({
   title,
   subtitle,
   icon,
@@ -32,7 +40,7 @@ export function CollapsibleSection({
     return defaultExpanded
   })
 
-  const toggle = () => setIsExpanded(!isExpanded)
+  const toggle = useCallback(() => setIsExpanded(prev => !prev), [])
 
   return (
     <Card padding="none" className={cn('overflow-hidden', className)}>
@@ -79,10 +87,10 @@ export function CollapsibleSection({
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            initial={COLLAPSE_ANIMATION.initial}
+            animate={COLLAPSE_ANIMATION.animate}
+            exit={COLLAPSE_ANIMATION.exit}
+            transition={COLLAPSE_ANIMATION.transition}
             style={{ overflow: 'hidden' }}
           >
             <CardContent className="p-4 sm:p-6">{children}</CardContent>
@@ -91,5 +99,5 @@ export function CollapsibleSection({
       </AnimatePresence>
     </Card>
   )
-}
+})
 

@@ -1,6 +1,6 @@
 export * from './Button'
 
-import React, { forwardRef, type ButtonHTMLAttributes, type ReactElement } from 'react'
+import React, { forwardRef, memo, type ButtonHTMLAttributes, type ReactElement } from 'react'
 import { cn } from '../../lib/utils'
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
@@ -12,23 +12,8 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   asChild?: boolean
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant = 'primary',
-      size = 'md',
-      isLoading = false,
-      leftIcon,
-      rightIcon,
-      disabled,
-      children,
-      asChild = false,
-      ...props
-    },
-    ref
-  ) => {
-    const baseStyles = `
+// Extract constants to prevent recreation
+const BASE_STYLES = `
       inline-flex items-center justify-center gap-2
       font-medium rounded-xl
       transition-all duration-200
@@ -37,7 +22,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       touch-target
     `
 
-    const variants = {
+const BUTTON_VARIANTS = {
       // Primary CTA - Brand gradient (green → aqua)
       primary: `
         gradient-brand text-white
@@ -104,25 +89,23 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         active:scale-[0.98]
         dark:text-brand
       `,
-    }
+} as const
 
-    const sizes = {
+const BUTTON_SIZES = {
       sm: 'px-3 py-1.5 text-sm min-h-[36px]',
       md: 'px-4 py-2.5 text-base min-h-[44px]',
       lg: 'px-6 py-3 text-lg min-h-[52px]',
       xl: 'px-8 py-4 text-xl min-h-[56px]',
-    }
+} as const
 
-    const buttonClasses = cn(baseStyles, variants[variant], sizes[size], className)
-    const buttonContent = (
-      <>
-        {isLoading ? (
-          <>
+// Loading spinner SVG component - extracted to prevent recreation
+const LoadingSpinnerSVG = memo(() => (
             <svg
               className="animate-spin h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
+    aria-hidden="true"
             >
               <circle
                 className="opacity-25"
@@ -138,6 +121,31 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
+))
+LoadingSpinnerSVG.displayName = 'LoadingSpinnerSVG'
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      isLoading = false,
+      leftIcon,
+      rightIcon,
+      disabled,
+      children,
+      asChild = false,
+      ...props
+    },
+    ref
+  ) => {
+    const buttonClasses = cn(BASE_STYLES, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className)
+    const buttonContent = (
+      <>
+        {isLoading ? (
+          <>
+            <LoadingSpinnerSVG />
             <span>Loading...</span>
           </>
         ) : (
@@ -168,26 +176,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <>
           {isLoading ? (
             <>
-              <svg
-                className="animate-spin h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+                <LoadingSpinnerSVG />
               <span>Loading...</span>
             </>
           ) : (
@@ -210,7 +199,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       
       // Filter out button-specific props that shouldn't be on anchor tags
       const linkProps = { ...props }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (linkProps as any).disabled
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (linkProps as any).type
       
       return React.cloneElement(child, {

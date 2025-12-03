@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import {
   CheckSquare,
@@ -13,6 +14,23 @@ import {
 import { Button } from '../../components/ui/Button'
 import { SEO, jsonLdSchemas } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
+import { ThemeToggle } from '../../components/common/ThemeToggle'
+import { useTheme } from '../../contexts/ThemeContext'
+
+// Background image URLs
+const LIGHT_BG_IMAGE_URL = '/images/background.jpeg'
+const DARK_BG_IMAGE_URL = '/images/background2.jpeg'
+
+// Style constants to prevent object recreation
+const BACKGROUND_STYLE = {
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  minHeight: '100vh',
+} as const
+
+const FEATURE_CARD_SHADOW = "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)"
 
 
 /**
@@ -23,61 +41,130 @@ export function Home() {
   const shouldReduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll()
   const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, shouldReduceMotion ? 1 : 0.95])
+  const { theme } = useTheme()
 
-  // Get appropriate animation variants based on reduced motion preference
-  const variants = {
-    fadeInUp: shouldReduceMotion
-      ? { hidden: { opacity: 1 }, visible: { opacity: 1, transition: { duration: 0.1 } } }
-      : {
-          hidden: { opacity: 0, y: 30 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-              duration: 0.6,
-              ease: [0.6, -0.05, 0.01, 0.99] as const,
-            },
+  // State management for background image
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
+  // Theme detection
+  const isLightTheme = theme === 'light'
+
+  // Choose image based on theme
+  useEffect(() => {
+    const url = isLightTheme ? LIGHT_BG_IMAGE_URL : DARK_BG_IMAGE_URL
+    setBackgroundImageUrl(url)
+    setImageLoaded(false)
+    setImageError(false)
+  }, [isLightTheme])
+
+  // Image preloading and error handling with proper cleanup
+  useEffect(() => {
+    if (!backgroundImageUrl || typeof document === 'undefined') return
+
+    const img = new Image()
+    let isMounted = true
+
+    const handleLoad = () => {
+      if (isMounted) {
+        setImageLoaded(true)
+        setImageError(false)
+      }
+    }
+
+    const handleError = () => {
+      if (isMounted) {
+        setImageError(true)
+        setImageLoaded(false)
+      }
+    }
+
+    img.onload = handleLoad
+    img.onerror = handleError
+    img.src = backgroundImageUrl
+
+    return () => {
+      isMounted = false
+      // Clean up event listeners
+      img.onload = null
+      img.onerror = null
+    }
+  }, [backgroundImageUrl])
+
+
+  // Memoize background style to prevent object recreation
+  const backgroundImageStyle = useMemo(() => ({
+    ...BACKGROUND_STYLE,
+    backgroundSize: 'cover' as const,
+    backgroundPosition: 'center center' as const,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundAttachment: 'fixed' as const,
+    willChange: 'auto' as const,
+  }), [])
+
+  // Memoize animation variants to prevent recreation on every render
+  const variants = useMemo(() => {
+    const reducedMotionVariant = { 
+      hidden: { opacity: 1 }, 
+      visible: { opacity: 1, transition: { duration: 0.1 } } 
+    }
+    
+    if (shouldReduceMotion) {
+      return {
+        fadeInUp: reducedMotionVariant,
+        fadeIn: reducedMotionVariant,
+        slideInLeft: reducedMotionVariant,
+        slideInRight: reducedMotionVariant,
+      }
+    }
+    
+    return {
+      fadeInUp: {
+        hidden: { opacity: 0, y: 30 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: {
+            duration: 0.6,
+            ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },
-    fadeIn: shouldReduceMotion
-      ? { hidden: { opacity: 1 }, visible: { opacity: 1, transition: { duration: 0.1 } } }
-      : {
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              duration: 0.5,
-              ease: "easeOut" as const,
-            },
+      },
+      fadeIn: {
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            duration: 0.5,
+            ease: "easeOut" as const,
           },
         },
-    slideInLeft: shouldReduceMotion
-      ? { hidden: { opacity: 1 }, visible: { opacity: 1, transition: { duration: 0.1 } } }
-      : {
-          hidden: { opacity: 0, x: -30 },
-          visible: {
-            opacity: 1,
-            x: 0,
-            transition: {
-              duration: 0.6,
-              ease: [0.6, -0.05, 0.01, 0.99] as const,
-            },
+      },
+      slideInLeft: {
+        hidden: { opacity: 0, x: -30 },
+        visible: {
+          opacity: 1,
+          x: 0,
+          transition: {
+            duration: 0.6,
+            ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },
-    slideInRight: shouldReduceMotion
-      ? { hidden: { opacity: 1 }, visible: { opacity: 1, transition: { duration: 0.1 } } }
-      : {
-          hidden: { opacity: 0, x: 30 },
-          visible: {
-            opacity: 1,
-            x: 0,
-            transition: {
-              duration: 0.6,
-              ease: [0.6, -0.05, 0.01, 0.99] as const,
-            },
+      },
+      slideInRight: {
+        hidden: { opacity: 0, x: 30 },
+        visible: {
+          opacity: 1,
+          x: 0,
+          transition: {
+            duration: 0.6,
+            ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },
-  }
+      },
+    }
+  }, [shouldReduceMotion])
 
   return (
     <>
@@ -88,10 +175,38 @@ export function Home() {
         jsonLd={{
           '@context': 'https://schema.org',
           '@graph': [jsonLdSchemas.organization, jsonLdSchemas.website],
-        } as any}
+        }}
       />
 
-      <main className="min-h-screen bg-gradient-to-br from-primary/5 via-background via-60% to-islamic-purple/5">
+      <main className="min-h-screen relative overflow-hidden">
+        {/* Fixed Background Layer - Completely stationary, no parallax */}
+        {backgroundImageUrl && !imageError && imageLoaded && (
+          <motion.div
+            className="fixed -z-10"
+            style={{
+              ...backgroundImageStyle,
+              backgroundImage: `url(${backgroundImageUrl})`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        )}
+
+        {/* Fallback gradient background (shown when image not loaded or error) */}
+        {(!backgroundImageUrl || imageError || !imageLoaded) && (
+          <div 
+            className="fixed -z-10 bg-gradient-to-br from-primary/5 via-background via-60% to-islamic-purple/5"
+            style={BACKGROUND_STYLE}
+          />
+        )}
+
+        {/* Overlay for better text readability */}
+        <div 
+          className="fixed -z-[9] bg-gradient-to-br from-primary/5 via-background/40 via-60% to-islamic-purple/5"
+          style={BACKGROUND_STYLE}
+        />
+
         {/* Header */}
         <motion.header 
           className="sticky top-0 z-[100] border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top"
@@ -112,22 +227,34 @@ export function Home() {
               },
             }}
           >
-            <motion.div variants={variants.slideInLeft}>
-              <Link to="/" className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity touch-target-sm">
-                <motion.img
-                  src="/logo.svg"
-                  alt="NikahPrep Logo - Crescent Moon and Heart"
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                  width={40}
-                  height={40}
-                  loading="eager"
-                  decoding="async"
-                  style={{ imageRendering: 'auto' }}
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                />
-                <span className="text-lg sm:text-xl font-bold">NikahPrep</span>
-              </Link>
+            <motion.div 
+              className="flex items-center gap-2 sm:gap-3"
+              variants={variants.slideInLeft}
+            >
+              {/* Logo and Theme Toggle grouped together - almost touching */}
+              <div className="flex items-center">
+                <Link to="/" className="flex items-center hover:opacity-80 transition-opacity touch-target-sm">
+                  <motion.img
+                    src="/logo.svg"
+                    alt="NikahPrep Logo - Crescent Moon and Heart"
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
+                    width={40}
+                    height={40}
+                    loading="eager"
+                    decoding="async"
+                    style={{ imageRendering: 'auto' }}
+                    whileHover={shouldReduceMotion ? {} : { scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  />
+                </Link>
+                
+                {/* Theme Toggle - pulled close to logo using negative margin */}
+                <div className="flex items-center -ml-1 sm:-ml-1.5">
+                  <ThemeToggle variant="icon" size="sm" />
+                </div>
+              </div>
+
+              <span className="text-lg sm:text-xl font-bold text-foreground">NikahPrep</span>
             </motion.div>
             <motion.div 
               className="flex gap-1.5 sm:gap-2"
@@ -144,7 +271,7 @@ export function Home() {
         </motion.header>
 
         {/* Hero Section */}
-        <section className="container py-10 sm:py-16 md:py-24 px-4 sm:px-6">
+        <section className="container py-10 sm:py-16 md:py-24 px-4 sm:px-6 relative z-10">
           <motion.div 
             className="mx-auto max-w-4xl text-center space-y-5 sm:space-y-6 md:space-y-8"
             initial="hidden"
@@ -160,7 +287,7 @@ export function Home() {
           >
             {/* Badge with pulse animation */}
             <motion.div
-              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-badge-gradient text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-5"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-badge-gradient text-xs sm:text-sm font-medium text-foreground mb-3 sm:mb-4 md:mb-5"
               variants={{
                 hidden: { opacity: 0, y: -20, scale: 0.9 },
                 visible: { 
@@ -176,7 +303,7 @@ export function Home() {
               }}
             >
               {shouldReduceMotion ? (
-                <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground" />
               ) : (
               <motion.div
                   animate={{
@@ -190,7 +317,7 @@ export function Home() {
                     ease: "easeInOut",
                   }}
                 >
-                  <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground" />
                 </motion.div>
               )}
               Islamic Marriage Preparation
@@ -249,7 +376,7 @@ export function Home() {
 
             {/* Description with fade-in */}
             <motion.p
-              className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 md:mt-6"
+              className="text-base sm:text-lg md:text-xl text-muted-foreground dark:text-foreground/80 max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 md:mt-6"
               variants={{
                 hidden: { opacity: 0, y: 10 },
                 visible: { 
@@ -281,42 +408,83 @@ export function Home() {
             >
               <motion.div
                 variants={{
-                  hidden: { opacity: 0, y: 10, scale: 0.95 },
+                  hidden: { opacity: 0, y: 20, scale: 0.8 },
                   visible: { 
                     opacity: 1, 
                     y: 0, 
                     scale: 1,
                     transition: {
                       type: "spring",
-                      stiffness: 200,
-                      damping: 15,
+                      stiffness: 300,
+                      damping: 20,
+                      mass: 0.8,
                     },
                   },
                 }}
+                whileHover={shouldReduceMotion ? {} : { 
+                  scale: 1.05,
+                  y: -2,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 17 
+                  } 
+                }}
+                whileTap={shouldReduceMotion ? {} : { 
+                  scale: 0.95,
+                  y: 0,
+                  transition: { 
+                    duration: 0.1 
+                  } 
+                }}
               >
-                <Button size="xl" variant="warm" className="shadow-lg min-h-[48px] w-full sm:w-auto" asChild>
+                <Button size="xl" variant="warm" className="shadow-lg min-h-[48px] w-full sm:w-auto relative overflow-hidden group" asChild>
                   <Link to="/signup">
-                    Start Your Journey
+                    <motion.span
+                      className="relative z-10"
+                      initial={{ opacity: 1 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      Start Your Journey
+                    </motion.span>
+                    {!shouldReduceMotion && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        initial={{ x: '-100%' }}
+                        whileHover={{ x: '100%' }}
+                        transition={{ duration: 0.6, ease: 'easeInOut' }}
+                      />
+                    )}
                   </Link>
                 </Button>
               </motion.div>
               <motion.div
                 variants={{
-                  hidden: { opacity: 0, y: 10, scale: 0.95 },
+                  hidden: { opacity: 0, y: 20, scale: 0.8 },
                   visible: { 
                     opacity: 1, 
                     y: 0, 
                     scale: 1,
                     transition: {
                       type: "spring",
-                      stiffness: 200,
-                      damping: 15,
+                      stiffness: 300,
+                      damping: 20,
+                      mass: 0.8,
+                      delay: 0.1,
                     },
                   },
                 }}
+                whileTap={shouldReduceMotion ? {} : { 
+                  scale: 0.98,
+                  transition: { 
+                    duration: 0.1 
+                  } 
+                }}
               >
                 <Button size="xl" variant="outline" className="min-h-[48px] w-full sm:w-auto" asChild>
-                  <Link to="/login">Sign In</Link>
+                  <Link to="/login">
+                    Sign In
+                  </Link>
                 </Button>
               </motion.div>
             </motion.div>
@@ -324,7 +492,7 @@ export function Home() {
         </section>
 
         {/* Features */}
-        <section className="container pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
+        <section className="container pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 relative z-10">
             <motion.div
             className="text-center mb-8 sm:mb-10 md:mb-12"
               initial={{ opacity: 0, y: 20 }}
@@ -332,8 +500,8 @@ export function Home() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">What You'll Get</h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">What You'll Get</h2>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground dark:text-foreground/80 max-w-xl mx-auto leading-relaxed">
               Everything you need for a blessed Islamic marriage
               </p>
             </motion.div>
@@ -391,7 +559,7 @@ export function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="container pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
+        <section className="container pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 relative z-10">
             <motion.div
             className="relative overflow-hidden rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 text-center border-2 border-primary/30 dark:border-primary/40 shadow-none"
             style={{ boxShadow: 'none' }}
@@ -423,7 +591,7 @@ export function Home() {
                 Begin Your Marriage Preparation
               </motion.h2>
               <motion.p
-                className="text-sm sm:text-base md:text-lg text-foreground/90 dark:text-foreground/80 font-medium mb-5 sm:mb-6 md:mb-8 leading-relaxed"
+                className="text-sm sm:text-base md:text-lg text-foreground/90 dark:text-foreground/95 font-medium mb-5 sm:mb-6 md:mb-8 leading-relaxed"
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -535,7 +703,7 @@ export function Home() {
 
         {/* Footer */}
         <motion.footer 
-          className="border-t bg-card/30 safe-area-inset-bottom"
+          className="border-t bg-card/30 safe-area-inset-bottom relative z-10"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
@@ -547,8 +715,8 @@ export function Home() {
             },
           }}
         >
-          <div className="container py-8 sm:py-10 md:py-12 px-4 sm:px-6">
-            <div className="flex flex-col items-center gap-4 sm:gap-5 md:gap-6 text-center">
+          <div className="container py-4 sm:py-5 md:py-6 px-4 sm:px-6">
+            <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 text-center">
               {/* Logo and Brand */}
               <motion.div variants={variants.fadeInUp}>
                 <Link 
@@ -572,35 +740,17 @@ export function Home() {
                 </Link>
               </motion.div>
               
-              {/* Tagline */}
-              <motion.p 
-                className="text-xs sm:text-sm text-muted-foreground"
-                variants={variants.fadeIn}
-              >
-                Preparing Hearts for Marriage
-              </motion.p>
-              
-              {/* Divider */}
-              <motion.div 
-                className="w-12 h-px bg-border mx-auto"
-                variants={variants.fadeIn}
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              />
-              
               {/* Blessing and Copyright */}
               <motion.div 
                 className="space-y-1.5"
                 variants={variants.fadeInUp}
               >
                 <p 
-                  className="text-xs sm:text-sm font-medium italic text-islamic-gold"
+                  className="text-sm sm:text-base font-semibold italic text-foreground/90 dark:text-foreground/95"
                 >
-                  May Allah bless all marriages
+                  May Allah Bless All Marriages
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground dark:text-foreground/70">
                   © {new Date().getFullYear()} NikahPrep
                 </p>
               </motion.div>
@@ -616,35 +766,43 @@ interface FeatureCardProps {
   icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
-  color: 'primary' | 'islamic-gold' | 'islamic-green' | 'islamic-purple'
+  color?: 'primary' | 'islamic-gold' | 'islamic-green' | 'islamic-purple' // Optional, not currently used
 }
 
-function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
+const FeatureCard = memo(function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
   const shouldReduceMotion = useReducedMotion()
+
+  // Memoize variants to prevent recreation on every render
+  const cardVariants = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        hidden: { opacity: 1 },
+        visible: { opacity: 1, transition: { duration: 0.1 } },
+      }
+    }
+    return {
+      hidden: {
+        opacity: 0,
+        y: 30,
+        scale: 0.9,
+      },
+      visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: {
+          type: "spring" as const,
+          stiffness: 100,
+          damping: 15,
+        },
+      },
+    }
+  }, [shouldReduceMotion])
 
   return (
     <motion.div
       className="group p-5 sm:p-6 md:p-7 rounded-xl border border-border/60 bg-card relative overflow-hidden min-h-[140px] sm:min-h-[160px]"
-      variants={shouldReduceMotion ? {
-        hidden: { opacity: 1 },
-        visible: { opacity: 1, transition: { duration: 0.1 } },
-      } : {
-        hidden: {
-          opacity: 0,
-          y: 30,
-          scale: 0.9,
-        },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: {
-            type: "spring",
-            stiffness: 100,
-            damping: 15,
-          },
-        },
-      }}
+      variants={cardVariants}
       whileHover={shouldReduceMotion ? {} : {
         y: -8,
         scale: 1.02,
@@ -656,7 +814,7 @@ function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
       }}
       whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
       style={{
-        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)",
+        boxShadow: FEATURE_CARD_SHADOW,
       }}
     >
       {/* Border glow effect on hover - simplified for reduced motion */}
@@ -682,10 +840,10 @@ function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
 
       {/* Content */}
       <div className="relative z-10">
-        <h3 className="font-semibold text-base sm:text-lg md:text-xl mb-2 sm:mb-3 leading-tight">
+        <h3 className="font-semibold text-base sm:text-lg md:text-xl text-foreground mb-2 sm:mb-3 leading-tight">
           {title}
         </h3>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed line-clamp-3">{description}</p>
+        <p className="text-sm sm:text-base text-muted-foreground dark:text-foreground/80 leading-relaxed line-clamp-3">{description}</p>
       </div>
 
       {/* Shadow enhancement on hover - hidden for reduced motion */}
@@ -702,4 +860,4 @@ function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
       )}
     </motion.div>
   )
-}
+})

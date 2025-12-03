@@ -2,6 +2,20 @@ import { forwardRef, type InputHTMLAttributes } from 'react'
 import { cn } from '../../lib/utils'
 import { Label } from './Label'
 
+// Extract constants to prevent recreation
+const INPUT_BASE_STYLES = `
+  w-full rounded-xl border bg-background text-foreground
+  px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base
+  min-h-[44px] sm:min-h-[48px]
+  transition-all duration-200
+  placeholder:text-muted-foreground
+  focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary
+  disabled:bg-muted disabled:cursor-not-allowed
+  dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground
+  dark:focus:ring-ring dark:focus:border-primary
+  dark:disabled:bg-muted
+`
+
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
@@ -33,18 +47,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              `
-              w-full rounded-xl border bg-background text-foreground
-              px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base
-              min-h-[44px] sm:min-h-[48px]
-              transition-all duration-200
-              placeholder:text-muted-foreground
-              focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary
-              disabled:bg-muted disabled:cursor-not-allowed
-              dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground
-              dark:focus:ring-ring dark:focus:border-primary
-              dark:disabled:bg-muted
-              `,
+              INPUT_BASE_STYLES,
               leftIcon && 'pl-10 sm:pl-11',
               rightIcon && 'pr-10 sm:pr-11',
               error

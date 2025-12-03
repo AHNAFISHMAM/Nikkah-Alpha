@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { cn } from '../../lib/utils'
 
 interface LoadingSpinnerProps {
@@ -6,18 +7,20 @@ interface LoadingSpinnerProps {
   fullScreen?: boolean
 }
 
-export function LoadingSpinner({ size = 'md', className, fullScreen = false }: LoadingSpinnerProps) {
-  const sizes = {
+// Extract constants to prevent recreation
+const SPINNER_SIZES = {
     sm: 'h-4 w-4 border-2',
     md: 'h-8 w-8 border-3',
     lg: 'h-12 w-12 border-4',
-  }
+} as const
+
+export const LoadingSpinner = memo(function LoadingSpinner({ size = 'md', className, fullScreen = false }: LoadingSpinnerProps) {
 
   const spinner = (
     <div
       className={cn(
         'animate-spin rounded-full border-islamic-gold/30 border-t-islamic-gold',
-        sizes[size],
+        SPINNER_SIZES[size],
         className
       )}
       role="status"
@@ -36,7 +39,7 @@ export function LoadingSpinner({ size = 'md', className, fullScreen = false }: L
   }
 
   return spinner
-}
+})
 
 // Full page loading state with branding
 export function PageLoader() {

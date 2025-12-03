@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { memo, useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -44,7 +44,7 @@ interface WeddingBudgetFormData {
   other_spent: number
 }
 
-export function WeddingBudget() {
+export const WeddingBudget = memo(function WeddingBudget() {
   const { data: weddingBudgetData, isLoading } = useWeddingBudget()
   const updateMutation = useUpdateWeddingBudget()
   const { isMobile, isTablet } = useViewport()
@@ -507,5 +507,5 @@ export function WeddingBudget() {
       </CardContent>
     </Card>
   )
-}
+})
 

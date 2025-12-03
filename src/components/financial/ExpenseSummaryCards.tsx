@@ -1,8 +1,22 @@
+import { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { formatCurrency } from '../../lib/utils'
 import { BarChart3, PieChart as PieChartIcon } from 'lucide-react'
+
+// Extract constants to prevent recreation
+const CARD_ANIMATION = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.3 },
+} as const
+
+const BUTTON_ANIMATION = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, delay: 0.3 },
+} as const
 
 export interface ExpenseSummaryItem {
   name: string
@@ -24,24 +38,26 @@ export interface ExpenseSummaryCardsProps {
  * Shows top 3 expenses with quick stats
  * Replaces charts on mobile for better UX
  */
-export function ExpenseSummaryCards({
+export const ExpenseSummaryCards = memo(function ExpenseSummaryCards({
   data,
   title,
   onViewChart,
   chartType = 'pie',
   className = '',
 }: ExpenseSummaryCardsProps) {
+  // Memoize calculations to prevent unnecessary recalculations
+  const total = useMemo(() => data.reduce((sum, item) => sum + item.value, 0), [data])
+  
   // Sort by value and take top 3
-  const topExpenses = [...data]
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 3)
-    .map((item) => {
-      const total = data.reduce((sum, d) => sum + d.value, 0)
-      const percentage = total > 0 ? (item.value / total) * 100 : 0
-      return { ...item, percentage }
-    })
-
-  const total = data.reduce((sum, item) => sum + item.value, 0)
+  const topExpenses = useMemo(() => {
+    return [...data]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3)
+      .map((item) => {
+        const percentage = total > 0 ? (item.value / total) * 100 : 0
+        return { ...item, percentage }
+      })
+  }, [data, total])
 
   if (topExpenses.length === 0) {
     return (
@@ -74,9 +90,9 @@ export function ExpenseSummaryCards({
         {topExpenses.map((expense, index) => (
           <motion.div
             key={expense.name}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            initial={CARD_ANIMATION.initial}
+            animate={CARD_ANIMATION.animate}
+            transition={{ ...CARD_ANIMATION.transition, delay: index * 0.1 }}
           >
             <Card
               variant="outlined"
@@ -126,9 +142,9 @@ export function ExpenseSummaryCards({
 
       {/* View Full Chart Button */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
+        initial={BUTTON_ANIMATION.initial}
+        animate={BUTTON_ANIMATION.animate}
+        transition={BUTTON_ANIMATION.transition}
       >
         <Button
           onClick={onViewChart}
@@ -141,5 +157,5 @@ export function ExpenseSummaryCards({
       </motion.div>
     </div>
   )
-}
+})
 

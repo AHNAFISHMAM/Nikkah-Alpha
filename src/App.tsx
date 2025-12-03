@@ -174,14 +174,27 @@ function App() {
                     zIndex: 9999,
                     pointerEvents: 'auto',
                     margin: 0, // Remove default margin, use gutter instead
+                    backgroundColor: 'var(--toast-bg)',
+                    color: 'var(--toast-text)',
+                    border: '1.5px solid var(--toast-border)',
                   },
                   success: {
+                    style: {
+                      backgroundColor: 'var(--toast-success-bg)',
+                      color: 'var(--toast-success-text)',
+                      border: '1.5px solid var(--toast-success-border)',
+                    },
                     iconTheme: {
                       primary: 'var(--color-success)',
                       secondary: 'var(--color-success-foreground)',
                     },
                   },
                   error: {
+                    style: {
+                      backgroundColor: 'var(--toast-error-bg)',
+                      color: 'var(--toast-error-text)',
+                      border: '1.5px solid var(--toast-error-border)',
+                    },
                     iconTheme: {
                       primary: 'var(--color-error)',
                       secondary: 'var(--color-error-foreground)',

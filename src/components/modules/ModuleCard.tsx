@@ -1,9 +1,28 @@
+import { memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { BookOpen, CheckCircle2, Clock, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Progress } from '../ui/Progress'
+
+// Extract constants to prevent recreation
+const ITEM_VARIANTS = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+    },
+  },
+} as const
+
+const HOVER_ANIMATION = {
+  scale: 1.02,
+  y: -4,
+  transition: { duration: 0.2 },
+} as const
 
 export interface ModuleCardProps {
   module: {
@@ -17,28 +36,19 @@ export interface ModuleCardProps {
   }
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.3,
-    },
-  },
-}
-
-export function ModuleCard({ module }: ModuleCardProps) {
-  const progressPercent =
+export const ModuleCard = memo(function ModuleCard({ module }: ModuleCardProps) {
+  // Memoize progress calculation
+  const progressPercent = useMemo(() =>
     module.totalLessons > 0
       ? Math.round((module.completedLessons / module.totalLessons) * 100)
-      : 0
+      : 0,
+    [module.totalLessons, module.completedLessons]
+  )
 
   return (
     <motion.div
-      variants={itemVariants}
-      whileHover={{ scale: 1.02, y: -4 }}
-      transition={{ duration: 0.2 }}
+      variants={ITEM_VARIANTS}
+      whileHover={HOVER_ANIMATION}
     >
       <Card className="h-full flex flex-col hover:border-primary/20 transition-colors">
         <CardHeader>
@@ -109,5 +119,5 @@ export function ModuleCard({ module }: ModuleCardProps) {
       </Card>
     </motion.div>
   )
-}
+})
 

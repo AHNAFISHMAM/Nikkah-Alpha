@@ -20,14 +20,15 @@ import { DatePicker } from '../../components/ui/DatePicker'
 
 type Step = 'essential' | 'personal' | 'location' | 'relationship'
 
-const stepConfig = {
+// Extract constants to prevent recreation
+const STEP_CONFIG = {
   essential: { index: 0, icon: User, title: 'Essential Information', subtitle: "Let's start with your name" },
   personal: { index: 1, icon: Calendar, title: 'Personal Details', subtitle: 'Help us personalize your experience' },
   location: { index: 2, icon: MapPin, title: 'Location', subtitle: 'Optional - helps us provide relevant content' },
   relationship: { index: 3, icon: Heart, title: 'Relationship', subtitle: 'Tell us about your partner' },
-}
+} as const
 
-const countries = [
+const COUNTRIES = [
   { value: 'US', label: 'United States' },
   { value: 'CA', label: 'Canada' },
   { value: 'GB', label: 'United Kingdom' },
@@ -45,7 +46,7 @@ const countries = [
   { value: 'NG', label: 'Nigeria' },
   { value: 'KE', label: 'Kenya' },
   { value: 'OTHER', label: 'Other' },
-]
+] as const
 
 export function ProfileSetup() {
   const { user, profile, refreshProfile } = useAuth()
@@ -71,26 +72,29 @@ export function ProfileSetup() {
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   
 
-  const currentStepIndex = stepConfig[step].index
+  // Memoize step calculations
+  const currentStepIndex = useMemo(() => STEP_CONFIG[step].index, [step])
   const totalSteps = 4
-  const progress = ((currentStepIndex + 1) / totalSteps) * 100
+  const progress = useMemo(() => ((currentStepIndex + 1) / totalSteps) * 100, [currentStepIndex])
 
-  // Get max date (18 years ago)
-  const getMaxDate = () => {
+  // Memoize date calculations
+  const maxDate = useMemo(() => {
     const date = new Date()
     date.setFullYear(date.getFullYear() - 18)
     return date.toISOString().split('T')[0]
-  }
+  }, [])
 
-  // Get min date (120 years ago)
-  const getMinDate = () => {
+  const minDate = useMemo(() => {
     const date = new Date()
     date.setFullYear(date.getFullYear() - 120)
     return date.toISOString().split('T')[0]
-  }
+  }, [])
 
-  // Calculate age from date of birth
-  const calculatedAge = formData.date_of_birth ? calculateAge(formData.date_of_birth) : null
+  // Memoize age calculation
+  const calculatedAge = useMemo(() => 
+    formData.date_of_birth ? calculateAge(formData.date_of_birth) : null,
+    [formData.date_of_birth]
+  )
 
   // Field validation function
   const validateField = useCallback((fieldName: string, value: any): string | null => {
@@ -492,8 +496,8 @@ export function ProfileSetup() {
               <div className="space-y-3">
                 {(['essential', 'personal', 'location', 'relationship'] as Step[]).map((s, idx) => {
                   const isActive = s === step
-                  const isCompleted = stepConfig[s].index < currentStepIndex
-                  const stepInfo = stepConfig[s]
+                  const isCompleted = STEP_CONFIG[s].index < currentStepIndex
+                  const stepInfo = STEP_CONFIG[s]
                   const StepIcon = stepInfo.icon
                   
                   return (
@@ -584,10 +588,10 @@ export function ProfileSetup() {
 
             <div className="mb-3">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                {stepConfig[step].title}
+                {STEP_CONFIG[step].title}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {stepConfig[step].subtitle}
+                {STEP_CONFIG[step].subtitle}
               </p>
             </div>
 
@@ -779,8 +783,8 @@ export function ProfileSetup() {
                             }
                           }}
                           onBlur={() => handleBlur('date_of_birth')}
-                          min={getMinDate()}
-                          max={getMaxDate()}
+                          min={minDate}
+                          max={maxDate}
                           placeholder="mm/dd/yyyy"
                           required
                           error={touched.date_of_birth ? !!errors.date_of_birth : undefined}
@@ -989,7 +993,7 @@ export function ProfileSetup() {
                               validateStep()
                             }
                           }}
-                          options={countries}
+                          options={COUNTRIES}
                           placeholder="Select your country"
                           className="w-full"
                         />

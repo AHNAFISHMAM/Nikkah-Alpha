@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Search, AlertCircle, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -12,7 +12,8 @@ import { useRealtimeModuleProgress } from '../../hooks/useRealtimeModuleProgress
 import { SEO } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
 
-const containerVariants = {
+// Extract constants to prevent recreation
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -20,9 +21,9 @@ const containerVariants = {
       staggerChildren: 0.1,
     },
   },
-}
+} as const
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
@@ -31,7 +32,7 @@ const itemVariants = {
       duration: 0.3,
     },
   },
-}
+} as const
 
 export function Modules() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -47,13 +48,13 @@ export function Modules() {
     isError: modulesError,
   } = useModulesWithProgress()
 
-  // Refetch function for error retry
-  const refetchModules = () => {
+  // Memoize refetch function
+  const refetchModules = useCallback(() => {
     window.location.reload()
-  }
+  }, [])
 
-  // Filter and sort modules
-  const filteredAndSortedModules = modulesWithProgress
+  // Memoize filter and sort operations to prevent unnecessary recalculations
+  const filteredAndSortedModules = useMemo(() => modulesWithProgress
     .filter((module) => {
       if (!searchQuery) return true
       const query = searchQuery.toLowerCase()
@@ -78,8 +79,7 @@ export function Modules() {
         return bProgress - aProgress
       }
       return 0
-    })
-
+    }), [modulesWithProgress, searchQuery, sortBy])
 
   if (modulesLoading) {
     return (
@@ -137,13 +137,13 @@ export function Modules() {
       <SEO {...PAGE_SEO.modules} />
       <motion.div
         className="min-h-screen bg-background"
-        variants={containerVariants}
+        variants={CONTAINER_VARIANTS}
         initial="hidden"
         animate="visible"
       >
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-6xl">
           {/* Header */}
-          <motion.div variants={itemVariants} className="mb-8 sm:mb-12">
+          <motion.div variants={ITEM_VARIANTS} className="mb-8 sm:mb-12">
             <div className="flex items-center gap-3 sm:gap-4 mb-4">
               <div className="p-2 sm:p-3 bg-primary/10 rounded-lg">
                 <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
@@ -168,7 +168,7 @@ export function Modules() {
 
           {/* Search and Sort */}
           {modulesWithProgress.length > 0 && (
-            <motion.div variants={itemVariants} className="mb-6 sm:mb-8">
+            <motion.div variants={ITEM_VARIANTS} className="mb-6 sm:mb-8">
               <Card>
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -205,7 +205,7 @@ export function Modules() {
 
           {/* Modules Grid */}
           {filteredAndSortedModules.length === 0 ? (
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card>
                 <CardContent className="p-12 text-center">
                   {searchQuery ? (
@@ -233,7 +233,7 @@ export function Modules() {
             </motion.div>
           ) : (
             <motion.div
-              variants={itemVariants}
+              variants={ITEM_VARIANTS}
               className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
             >
               {filteredAndSortedModules.map((module) => (

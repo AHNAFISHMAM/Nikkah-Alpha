@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
@@ -37,18 +37,19 @@ interface CategoryWithItems extends ChecklistCategory {
   })[]
 }
 
-const containerVariants = {
+// Extract constants to prevent recreation
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.05 },
   },
-}
+} as const
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
-}
+} as const
 
 export function Checklist() {
   const { user } = useAuth()
@@ -241,10 +242,11 @@ export function Checklist() {
     })
   }
 
-  // Use safe defaults while loading
-  const displayCategories = categories || []
+  // Use safe defaults while loading - memoized
+  const displayCategories = useMemo(() => categories || [], [categories])
   
-  const calculateProgress = () => {
+  // Memoize progress calculation to prevent unnecessary recalculations
+  const progress = useMemo(() => {
     let completed = 0
     let total = 0
 
@@ -264,11 +266,10 @@ export function Checklist() {
       total,
       percent: total > 0 ? Math.round((completed / total) * 100) : 0,
     }
-  }
+  }, [displayCategories])
 
-  const progress = calculateProgress()
-
-  // Create Set for O(1) lookup of completed items
+  // Memoize Sets and Maps for O(1) lookup - prevents recreation
+  const { completedSet, progressMap } = useMemo(() => {
   const completedSet = new Set<string>()
   const progressMap = new Map<string, { notes: string | null; discussWithPartner: boolean }>()
   
@@ -287,6 +288,9 @@ export function Checklist() {
       }
     })
   })
+    
+    return { completedSet, progressMap }
+  }, [displayCategories])
 
   if (isError) {
     return (
@@ -398,7 +402,7 @@ export function Checklist() {
             <motion.div
               initial="hidden"
               animate="visible"
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               className="space-y-4 sm:space-y-6 mt-6 sm:mt-8"
             >
             {isLoading && !categories ? (
@@ -422,7 +426,7 @@ export function Checklist() {
                 : 0
 
               return (
-                <motion.div key={category.id} variants={itemVariants}>
+                <motion.div key={category.id} variants={ITEM_VARIANTS}>
                   <Card padding="none" className="overflow-hidden">
                     <button
                       onClick={() => toggleCategory(category.id)}

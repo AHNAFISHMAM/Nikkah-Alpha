@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { memo, useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -50,7 +50,7 @@ const PRE_DEFINED_GOALS: Omit<SavingsGoal, 'goalField' | 'currentField'>[] = [
   },
 ]
 
-export function SavingsGoals() {
+export const SavingsGoals = memo(function SavingsGoals() {
   const { data: savingsGoalsData, isLoading } = useSavingsGoals()
   const updateMutation = useUpdateSavingsGoals()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -489,5 +489,5 @@ export function SavingsGoals() {
       </CardContent>
     </Card>
   )
-}
+})
 

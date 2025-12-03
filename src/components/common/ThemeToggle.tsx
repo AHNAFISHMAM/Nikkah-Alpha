@@ -1,8 +1,9 @@
 import { memo } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Moon } from 'lucide-react'
+import { FaCloud } from 'react-icons/fa'
 import { cn } from '../../lib/utils'
 import { useThemeMode } from '../../hooks/useThemeMode'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ThemeToggleProps {
   /**
@@ -50,16 +51,19 @@ export const ThemeToggle = memo(function ThemeToggle({
   const sizeConfig = {
     sm: {
       icon: 'h-4 w-4',
+      iconSize: 16,
       button: 'h-8 w-8',
       text: 'text-xs',
     },
     md: {
       icon: 'h-5 w-5',
+      iconSize: 20,
       button: 'h-10 w-10',
       text: 'text-sm',
     },
     lg: {
       icon: 'h-6 w-6',
+      iconSize: 24,
       button: 'h-12 w-12',
       text: 'text-base',
     },
@@ -76,8 +80,8 @@ export const ThemeToggle = memo(function ThemeToggle({
         aria-pressed={isDark}
         className={cn(
           'relative flex items-center justify-center rounded-lg',
-          'bg-accent hover:bg-accent/80',
-          'text-muted-foreground hover:text-foreground',
+          'bg-transparent hover:bg-background/20',
+          'text-foreground',
           'transition-all duration-200',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-islamic-gold',
           'touch-manipulation',
@@ -85,18 +89,35 @@ export const ThemeToggle = memo(function ThemeToggle({
           className
         )}
       >
-        <motion.div
-          initial={false}
-          animate={{ rotate: isDark ? 0 : 180, scale: 1 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          {isDark ? (
-            <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
-          ) : (
-            <Sun className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
-          )}
-        </motion.div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <AnimatePresence mode="wait" initial={false}>
+            {isDark ? (
+              <motion.div
+                key="moon"
+                initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="flex items-center justify-center"
+              >
+                <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="cloud"
+                initial={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="flex items-center justify-center text-foreground"
+              >
+                <span style={{ color: 'inherit', display: 'inline-flex' }}>
+                  <FaCloud size={config.iconSize} color="currentColor" aria-hidden="true" />
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </button>
     )
   }
@@ -107,28 +128,47 @@ export const ThemeToggle = memo(function ThemeToggle({
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}
-      className={cn(
-        'relative flex items-center gap-2 rounded-lg px-3 py-2',
-        'bg-accent hover:bg-accent/80',
-        'text-muted-foreground hover:text-foreground',
-        'transition-all duration-200',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-islamic-gold',
-        'touch-manipulation min-h-[44px]',
-        className
-      )}
-    >
-      <motion.div
-        initial={false}
-        animate={{ rotate: isDark ? 0 : 180, scale: 1 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="flex items-center justify-center"
-      >
-        {isDark ? (
-          <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
-        ) : (
-          <Sun className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
+        className={cn(
+          'relative flex items-center justify-center gap-2 rounded-lg px-3 py-2',
+          'bg-transparent hover:bg-background/20',
+          'text-foreground',
+          'transition-all duration-200',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-islamic-gold',
+          'touch-manipulation min-h-[44px] min-w-[44px]',
+          className
         )}
-      </motion.div>
+    >
+      <div className="flex items-center justify-center" style={{ width: config.iconSize, height: config.iconSize }}>
+        <AnimatePresence mode="wait" initial={false}>
+          {isDark ? (
+            <motion.div
+              key="moon"
+              initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="flex items-center justify-center"
+              style={{ width: config.iconSize, height: config.iconSize }}
+            >
+              <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cloud"
+              initial={{ opacity: 0, scale: 0.5, rotate: 90 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.5, rotate: -90 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="flex items-center justify-center text-foreground"
+              style={{ width: config.iconSize, height: config.iconSize }}
+            >
+              <span style={{ color: 'inherit', display: 'inline-flex' }}>
+                <FaCloud size={config.iconSize} color="currentColor" aria-hidden="true" />
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       {showLabel && (
         <span className={cn(config.text, 'font-medium')}>
           {isDark ? 'Dark' : 'Light'}

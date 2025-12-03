@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -30,7 +30,8 @@ import { useScrollToSection } from '../../hooks/useScrollToSection'
 
 type TabType = 'budget' | 'mahr' | 'wedding' | 'savings'
 
-const tabs: Array<{ id: TabType; label: string; icon: typeof Wallet }> = [
+// Extract constants to prevent recreation
+const TABS: Array<{ id: TabType; label: string; icon: typeof Wallet }> = [
   { id: 'budget', label: 'Budget', icon: Wallet },
   { id: 'mahr', label: 'Mahr', icon: Calculator },
   { id: 'wedding', label: 'Wedding', icon: Target },
@@ -40,7 +41,12 @@ const tabs: Array<{ id: TabType; label: string; icon: typeof Wallet }> = [
 export function Financial() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') as TabType | null
-  const [activeTab, setActiveTab] = useState<TabType>(tabParam && tabs.some(t => t.id === tabParam) ? tabParam : 'budget')
+  // Memoize initial tab calculation
+  const initialTab = useMemo(() => {
+    return tabParam && TABS.some(t => t.id === tabParam) ? tabParam : 'budget'
+  }, [tabParam])
+  
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
 
   // Real-time updates for financial data
   useRealtimeFinancialData()
@@ -52,12 +58,14 @@ export function Financial() {
     }
   }, [activeTab, setSearchParams])
 
-  // Update tab when URL changes
+  // Update tab when URL changes - memoize check
+  const isValidTab = useMemo(() => tabParam && TABS.some(t => t.id === tabParam), [tabParam])
+  
   useEffect(() => {
-    if (tabParam && tabs.some(t => t.id === tabParam)) {
+    if (isValidTab && tabParam) {
       setActiveTab(tabParam)
     }
-  }, [tabParam])
+  }, [isValidTab, tabParam])
   
   // Auto-scroll to section when hash is present in URL
   useScrollToSection()
@@ -97,7 +105,7 @@ export function Financial() {
           {/* Tab Navigation */}
           <div className="border-b border-border mb-4 sm:mb-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-              {tabs.map((tab) => {
+              {TABS.map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
                 return (

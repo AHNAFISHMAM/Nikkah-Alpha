@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -91,7 +92,7 @@ interface FinancialMiniCardProps {
   isLoading?: boolean
 }
 
-function FinancialMiniCard({ 
+const FinancialMiniCard = memo(function FinancialMiniCard({ 
   icon, 
   label, 
   amount, 
@@ -100,7 +101,8 @@ function FinancialMiniCard({
   link,
   isLoading 
 }: FinancialMiniCardProps) {
-  const colorClasses = {
+  // Extract constants to prevent recreation
+  const COLOR_CLASSES = {
     green: {
       bg: 'bg-green-500/10 dark:bg-green-500/20',
       text: 'text-green-600 dark:text-green-400',
@@ -121,9 +123,9 @@ function FinancialMiniCard({
       text: 'text-amber-600 dark:text-amber-400',
       border: 'border-amber-500/20'
     }
-  }
+  } as const
 
-  const colors = colorClasses[color]
+  const colors = COLOR_CLASSES[color]
 
   return (
     <Link
@@ -162,9 +164,9 @@ function FinancialMiniCard({
       </div>
     </Link>
   )
-}
+})
 
-export function QuickOverviewCard({
+export const QuickOverviewCard = memo(function QuickOverviewCard({
   budgetData,
   budgetLoading,
   mahrData,
@@ -704,4 +706,4 @@ export function QuickOverviewCard({
       </Card>
     </motion.div>
   )
-}
+})

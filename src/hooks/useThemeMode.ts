@@ -188,10 +188,16 @@ export function useThemeMode() {
     lastSyncedThemeRef.current = newTheme
 
     // Show toast IMMEDIATELY (optimistic feedback - best practice for instant UX)
-    toast.success(
+    toast(
       newTheme === 'dark' ? '🌙 Switched to dark mode' : '☀️ Switched to light mode',
       {
         duration: 2000,
+        icon: null,
+        style: {
+          backgroundColor: 'var(--toast-info-bg)',
+          color: 'var(--toast-info-text)',
+          border: '1.5px solid var(--toast-info-border)',
+        },
         ariaProps: {
           role: 'alert',
           'aria-live': 'polite',

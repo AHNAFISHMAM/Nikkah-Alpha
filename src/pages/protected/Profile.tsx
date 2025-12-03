@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
 import {
   User,
-  Mail,
   Calendar,
   LogOut,
   ChevronRight,
@@ -20,7 +19,6 @@ import {
   Heart,
   Download,
   Trash2,
-  AlertTriangle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
@@ -41,7 +39,6 @@ import { PartnerConnectionCard } from '../../components/profile/PartnerConnectio
 import { NotificationPreferencesCard } from '../../components/profile/NotificationPreferencesCard'
 import { useRealtimeProfile } from '../../hooks/useRealtimeProfile'
 import { useRealtimePartnerProfile } from '../../hooks/useRealtimePartnerProfile'
-import { useRealtimePartnerInvitations } from '../../hooks/useRealtimePartnerInvitations'
 import { useRealtimeFavorites } from '../../hooks/useRealtimeFavorites'
 import { useScrollToSection } from '../../hooks/useScrollToSection'
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog'
@@ -50,26 +47,26 @@ import { useDeleteUserData } from '../../hooks/useDeleteUserData'
 import { Moon, Sun } from 'lucide-react'
 
 
-const containerVariants = {
+// Extract constants to prevent recreation
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.1 },
   },
-}
+} as const
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-}
+} as const
 
 export function Profile() {
   const { user, logout, isAuthenticated } = useAuth()
-  const { data: profile, isLoading: profileLoading } = useProfile()
+  const { data: profile } = useProfile()
   const updateProfileMutation = useUpdateProfile()
   const { greenTheme, changeTheme, getThemeMeta, allThemes, isSyncing } = useGreenTheme()
   const navigate = useNavigate()
-  const location = useLocation()
   const [isEditing, setIsEditing] = useState(false)
 
   // Real-time updates
@@ -255,11 +252,11 @@ export function Profile() {
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={containerVariants}
+            variants={CONTAINER_VARIANTS}
             className="space-y-6 sm:space-y-8"
           >
             {/* Profile Header Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card className="overflow-hidden" padding="none">
                 <div className="bg-gradient-to-r from-primary/10 via-islamic-gold/5 to-islamic-purple/10 p-6 sm:p-8 lg:p-10">
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
@@ -293,7 +290,7 @@ export function Profile() {
             </motion.div>
 
             {/* Profile Information Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card padding="none">
                 <CardHeader className="border-b border-border px-6 py-5 sm:px-8 sm:py-6">
                   <div className="flex items-center justify-between">
@@ -454,7 +451,7 @@ export function Profile() {
             </div>
 
             {/* Appearance Settings Card - Mobile/Tablet Only */}
-            <motion.div variants={itemVariants} className="lg:hidden">
+            <motion.div variants={ITEM_VARIANTS} className="lg:hidden">
               <Card padding="none">
                 <CardHeader className="border-b border-border px-6 py-5 sm:px-8 sm:py-6">
                   <div className="flex items-center gap-3 sm:gap-4">
@@ -494,17 +491,17 @@ export function Profile() {
             </motion.div>
 
             {/* Notification Preferences Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <NotificationPreferencesCard />
             </motion.div>
 
             {/* Favorite Resources Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <FavoriteResourcesCard />
             </motion.div>
 
             {/* Green Theme Selector Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card padding="none">
                 <CardHeader className="border-b border-border px-6 py-5 sm:px-8 sm:py-6">
                   <div className="flex items-center justify-between">
@@ -604,7 +601,7 @@ export function Profile() {
 
             {/* Account Settings Card - Hidden for now */}
             {false && (
-              <motion.div variants={itemVariants}>
+              <motion.div variants={ITEM_VARIANTS}>
                 <Card padding="none">
                   <CardHeader className="border-b border-border px-6 py-5 sm:px-8 sm:py-6">
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -674,7 +671,7 @@ export function Profile() {
             )}
 
             {/* Privacy & Data Management Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card padding="none">
                 <CardHeader className="border-b border-border px-6 py-5 sm:px-8 sm:py-6">
                   <div className="flex items-center gap-3 sm:gap-4">
@@ -729,7 +726,7 @@ export function Profile() {
             </motion.div>
 
             {/* Sign Out Card */}
-            <motion.div variants={itemVariants}>
+            <motion.div variants={ITEM_VARIANTS}>
               <Card padding="none" className="border-red-100 dark:border-red-900/30">
                 <CardContent className="p-0">
                   <button
@@ -754,7 +751,7 @@ export function Profile() {
 
             {/* App Version */}
             <motion.p
-              variants={itemVariants}
+              variants={ITEM_VARIANTS}
               className="text-center text-sm text-muted-foreground pb-8"
             >
               NikahPrep v1.0.0

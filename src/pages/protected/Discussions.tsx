@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -33,7 +33,8 @@ import { cn } from '../../lib/utils'
 import { NotesEditor } from '../../components/discussions/NotesEditor'
 import { PartnerStatusBadge } from '../../components/discussions/PartnerStatusBadge'
 
-const categoryConfig: Record<string, { color: string; bgColor: string; icon: typeof Heart }> = {
+// Extract constants to prevent recreation
+const CATEGORY_CONFIG: Record<string, { color: string; bgColor: string; icon: typeof Heart }> = {
   values: { color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20', icon: Heart },
   family: { color: 'text-secondary-foreground', bgColor: 'bg-secondary/10 dark:bg-secondary/20', icon: Users },
   lifestyle: { color: 'text-accent-foreground', bgColor: 'bg-accent/10 dark:bg-accent/20', icon: Sparkles },
@@ -43,18 +44,18 @@ const categoryConfig: Record<string, { color: string; bgColor: string; icon: typ
   goals: { color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30', icon: Sparkles },
 }
 
-const containerVariants = {
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.05 },
   },
-}
+} as const
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
-}
+} as const
 
 export function Discussions() {
   const { user } = useAuth()
@@ -236,7 +237,8 @@ export function Discussions() {
     },
   })
 
-  const togglePrompt = (promptId: string) => {
+  // Memoize toggle function
+  const togglePrompt = useCallback((promptId: string) => {
     setExpandedPrompts((prev) => {
       const next = new Set(prev)
       if (next.has(promptId)) {
@@ -246,27 +248,36 @@ export function Discussions() {
       }
       return next
     })
-  }
+  }, [])
 
-  // Use safe defaults while loading
-  const displayPrompts = prompts || []
+  // Use safe defaults while loading - memoized
+  const displayPrompts = useMemo(() => prompts || [], [prompts])
   
-  // Group prompts by category
-  const groupedPrompts = displayPrompts.reduce((acc: Record<string, any[]>, prompt: any) => {
+  // Memoize grouped prompts calculation
+  const groupedPrompts = useMemo(() => displayPrompts.reduce((acc: Record<string, any[]>, prompt: any) => {
     const category = prompt.category || 'Other'
     if (!acc[category]) acc[category] = []
     acc[category].push(prompt)
     return acc
-  }, {})
+  }, {}), [displayPrompts])
   
-  // Calculate progress with safe access
-  const totalPrompts = displayPrompts.length
-  const discussedPrompts = displayPrompts.filter((p: any) => {
+  // Memoize progress calculations
+  const { totalPrompts, discussedPrompts, progress, isAllDiscussed } = useMemo(() => {
+    const total = displayPrompts.length
+    const discussed = displayPrompts.filter((p: any) => {
     const answers = Array.isArray(p.user_discussion_answers) ? p.user_discussion_answers : []
     return answers.some((a: any) => a.is_discussed)
   }).length
-  const progress = totalPrompts > 0 ? (discussedPrompts / totalPrompts) * 100 : 0
-  const isAllDiscussed = discussedPrompts === totalPrompts && totalPrompts > 0
+    const progressPercent = total > 0 ? (discussed / total) * 100 : 0
+    const allDiscussed = discussed === total && total > 0
+    
+    return {
+      totalPrompts: total,
+      discussedPrompts: discussed,
+      progress: progressPercent,
+      isAllDiscussed: allDiscussed,
+    }
+  }, [displayPrompts])
 
   if (isError) {
     return (
@@ -448,11 +459,11 @@ export function Discussions() {
             <motion.div
               initial="hidden"
               animate="visible"
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               className="space-y-6 sm:space-y-8 mt-6 sm:mt-8"
             >
             {groupedPrompts && Object.entries(groupedPrompts).map(([category, categoryPrompts]: [string, any[]]) => {
-              const config = categoryConfig[category] || { color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageCircle }
+              const config = CATEGORY_CONFIG[category] || { color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageCircle }
               const CategoryIcon = config.icon
               const categoryDiscussed = categoryPrompts.filter((p: any) =>
                 p.user_discussion_answers?.some((a: any) => a.is_discussed)
@@ -461,7 +472,7 @@ export function Discussions() {
                 return (
                   <motion.div
                     key={category}
-                    variants={itemVariants}
+                    variants={ITEM_VARIANTS}
                   >
                     {/* Category Header */}
                     <div className="flex items-center justify-between mb-4 sm:mb-5">

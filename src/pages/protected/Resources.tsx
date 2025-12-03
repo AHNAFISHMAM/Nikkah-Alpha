@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -16,7 +16,6 @@ import {
   Star,
   Search,
   Sparkles,
-  RefreshCw,
   SlidersHorizontal,
   Loader2,
 } from 'lucide-react'
@@ -47,7 +46,8 @@ interface ResourceWithFavorites {
   user_resource_favorites?: Array<{ id: string; user_id: string; resource_id: string }> | null
 }
 
-const categoryConfig: Record<string, { icon: typeof BookOpen; color: string; bgColor: string }> = {
+// Extract constants to prevent recreation
+const CATEGORY_CONFIG: Record<string, { icon: typeof BookOpen; color: string; bgColor: string }> = {
   Books: { icon: BookOpen, color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
   Scholarly: { icon: GraduationCap, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
   Counseling: { icon: Users, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30' },
@@ -56,20 +56,20 @@ const categoryConfig: Record<string, { icon: typeof BookOpen; color: string; bgC
   Courses: { icon: FileText, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
 }
 
-const categoryOrder = ['Books', 'Scholarly', 'Counseling', 'Finance', 'Duas', 'Courses']
+const CATEGORY_ORDER = ['Books', 'Scholarly', 'Counseling', 'Finance', 'Duas', 'Courses'] as const
 
-const containerVariants = {
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.05 },
   },
-}
+} as const
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-}
+} as const
 
 export function Resources() {
   const { user } = useAuth()
@@ -96,7 +96,7 @@ export function Resources() {
     }
   }, [searchParams])
 
-  const { data: resources, isLoading, refetch } = useQuery({
+  const { data: resources, isLoading } = useQuery({
     queryKey: ['resources', user?.id],
     queryFn: async () => {
       if (!user) {
@@ -197,10 +197,12 @@ export function Resources() {
       await queryClient.cancelQueries({ queryKey: ['favorite-resources', user?.id] })
 
       // Snapshot previous value for rollback
-      const previousResources = queryClient.getQueryData<ResourceWithFavorites[]>(['resources', user?.id])
+      if (!user) return { previousResources: undefined }
+      
+      const previousResources = queryClient.getQueryData<ResourceWithFavorites[]>(['resources', user.id])
 
       // Optimistically update the UI
-      queryClient.setQueryData<ResourceWithFavorites[]>(['resources', user?.id], (old) => {
+      queryClient.setQueryData<ResourceWithFavorites[]>(['resources', user.id], (old) => {
         if (!old) return old
         return old.map(resource => {
           if (resource.id === resourceId) {
@@ -217,7 +219,7 @@ export function Resources() {
 
       return { previousResources }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback optimistic update on error
       if (context?.previousResources) {
         queryClient.setQueryData(['resources', user?.id], context.previousResources)
@@ -246,13 +248,13 @@ export function Resources() {
     resources: displayResources.map(r => ({ id: r.id, title: r.title, category: r.category }))
   })
   
-  // Get unique categories in specified order
-  const categories = categoryOrder.filter(cat => 
+  // Get unique categories in specified order - memoized
+  const categories = useMemo(() => CATEGORY_ORDER.filter(cat => 
     displayResources.some((r) => r.category === cat)
-  )
+  ), [displayResources])
 
-  // Filter resources (use debounced search)
-  const filteredResources = displayResources.filter((resource) => {
+  // Memoize filtered resources to prevent unnecessary recalculations
+  const filteredResources = useMemo(() => displayResources.filter((resource) => {
     const matchesSearch = debouncedSearchQuery === '' ||
       resource.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
       resource.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
@@ -277,7 +279,7 @@ export function Resources() {
     }
 
     return matches
-  })
+  }), [displayResources, debouncedSearchQuery, selectedCategory, showSavedOnly])
 
   console.log('🎯 Filtered resources:', {
     total: filteredResources.length,
@@ -478,18 +480,18 @@ export function Resources() {
               <motion.div
                 initial="hidden"
                 animate="visible"
-                variants={containerVariants}
+                variants={CONTAINER_VARIANTS}
                 className="space-y-6 sm:space-y-8 mt-6 sm:mt-8"
               >
-                {categoryOrder.map((category) => {
+                {CATEGORY_ORDER.map((category) => {
                   const categoryResources = groupedResources[category] || []
                   if (categoryResources.length === 0) return null
 
-                  const config = categoryConfig[category] || { icon: FileText, color: 'text-muted-foreground', bgColor: 'bg-muted' }
+                  const config = CATEGORY_CONFIG[category] || { icon: FileText, color: 'text-muted-foreground', bgColor: 'bg-muted' }
                   const CategoryIcon = config.icon
 
                   return (
-                    <motion.div key={category} variants={itemVariants}>
+                    <motion.div key={category} variants={ITEM_VARIANTS}>
                       {/* Category Header */}
                       <div className="mb-4 sm:mb-5">
                         <h2 className="text-lg sm:text-xl font-semibold text-foreground capitalize">
@@ -510,7 +512,7 @@ export function Resources() {
                           return (
                             <motion.div 
                               key={resource.id} 
-                              variants={itemVariants}
+                              variants={ITEM_VARIANTS}
                               whileHover={{
                                 y: -8,
                                 scale: 1.02,

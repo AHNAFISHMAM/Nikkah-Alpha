@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { memo, useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -20,7 +20,7 @@ interface MahrFormData {
   notes: string
 }
 
-export function MahrTracker() {
+export const MahrTracker = memo(function MahrTracker() {
   const { data: mahrData, isLoading } = useMahr()
   const updateMutation = useUpdateMahr()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -369,5 +369,5 @@ export function MahrTracker() {
       </CardContent>
     </Card>
   )
-}
+})
 

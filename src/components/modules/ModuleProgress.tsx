@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import { Card, CardContent } from '../ui/Card'
 import { Progress } from '../ui/Progress'
 
@@ -8,8 +9,9 @@ export interface ModuleProgressProps {
   className?: string
 }
 
-export function ModuleProgress({ completed, total, showLabel = true, className }: ModuleProgressProps) {
-  const percent = total > 0 ? Math.round((completed / total) * 100) : 0
+export const ModuleProgress = memo(function ModuleProgress({ completed, total, showLabel = true, className }: ModuleProgressProps) {
+  // Memoize percent calculation
+  const percent = useMemo(() => total > 0 ? Math.round((completed / total) * 100) : 0, [completed, total])
 
   return (
     <Card className={className}>
@@ -29,5 +31,5 @@ export function ModuleProgress({ completed, total, showLabel = true, className }
       </CardContent>
     </Card>
   )
-}
+})
 

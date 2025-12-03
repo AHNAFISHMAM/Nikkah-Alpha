@@ -1,9 +1,9 @@
+import { memo, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, Circle, ArrowRight, AlertCircle } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card'
+import { Card, CardTitle, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
-import { cn } from '../../lib/utils'
 import type { PendingTask } from '../../hooks/usePendingTasks'
 
 interface PendingTasksCardProps {
@@ -11,14 +11,30 @@ interface PendingTasksCardProps {
   isLoading?: boolean
 }
 
-export function PendingTasksCard({ tasks, isLoading }: PendingTasksCardProps) {
-  const hasTasks = tasks && tasks.length > 0
+// Extract constants to prevent recreation
+const CARD_ANIMATION = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: 0.4 },
+} as const
+
+const SKELETON_ITEMS = [1, 2, 3] as const
+
+export const PendingTasksCard = memo(function PendingTasksCard({ tasks, isLoading }: PendingTasksCardProps) {
+  const hasTasks = useMemo(() => tasks && tasks.length > 0, [tasks])
+  
+  // Memoize task count text
+  const taskCountText = useMemo(() => {
+    if (isLoading) return 'Loading...'
+    if (!hasTasks) return 'All tasks completed!'
+    return `${tasks.length} pending ${tasks.length === 1 ? 'task' : 'tasks'}`
+  }, [tasks, hasTasks, isLoading])
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
+      initial={CARD_ANIMATION.initial}
+      animate={CARD_ANIMATION.animate}
+      transition={CARD_ANIMATION.transition}
     >
       <Card padding="none" className="overflow-hidden">
         <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-600/10 dark:from-amber-500/20 dark:via-amber-400/10 dark:to-amber-600/20 px-6 py-5 sm:px-8 sm:py-6 border-b border-border">
@@ -30,7 +46,7 @@ export function PendingTasksCard({ tasks, isLoading }: PendingTasksCardProps) {
               <div>
                 <CardTitle className="text-lg sm:text-xl">Important Tasks</CardTitle>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  {isLoading ? 'Loading...' : hasTasks ? `${tasks.length} pending ${tasks.length === 1 ? 'task' : 'tasks'}` : 'All tasks completed!'}
+                  {taskCountText}
                 </p>
               </div>
             </div>
@@ -46,7 +62,7 @@ export function PendingTasksCard({ tasks, isLoading }: PendingTasksCardProps) {
         <CardContent className="p-6 sm:p-8">
           {isLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
+              {SKELETON_ITEMS.map((i) => (
                 <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />
               ))}
             </div>
@@ -121,5 +137,5 @@ export function PendingTasksCard({ tasks, isLoading }: PendingTasksCardProps) {
       </Card>
     </motion.div>
   )
-}
+})
 

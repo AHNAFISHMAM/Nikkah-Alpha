@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Button } from '../ui/Button'
 import { Edit2, Save, X, Loader2 } from 'lucide-react'
 
@@ -11,7 +12,7 @@ interface EditViewToggleProps {
   className?: string
 }
 
-export function EditViewToggle({
+export const EditViewToggle = memo(function EditViewToggle({
   isEditMode,
   onToggle,
   onSave,
@@ -55,5 +56,5 @@ export function EditViewToggle({
       Edit
     </Button>
   )
-}
+})
 

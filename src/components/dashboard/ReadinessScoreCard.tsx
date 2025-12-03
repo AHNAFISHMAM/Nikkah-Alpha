@@ -1,5 +1,6 @@
+import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, CheckCircle, BookOpen, MessageCircle, Target } from 'lucide-react'
+import { CheckCircle, BookOpen, MessageCircle, Target } from 'lucide-react'
 import { Card, CardContent } from '../ui/Card'
 import { Progress } from '../ui/Progress'
 import { cn } from '../../lib/utils'
@@ -10,7 +11,28 @@ interface ReadinessScoreCardProps {
   isLoading?: boolean
 }
 
-const statusConfig = {
+// Extract constants to prevent recreation
+const CARD_ANIMATION = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay: 0.1 },
+} as const
+
+const SCORE_ANIMATION = {
+  initial: { scale: 0.8, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  transition: { duration: 0.5, delay: 0.3 },
+} as const
+
+const LABEL_ANIMATION = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 0.5, delay: 0.5 },
+} as const
+
+const SKELETON_ITEMS = [1, 2, 3] as const
+
+const STATUS_CONFIG = {
   not_started: {
     label: 'Getting Started',
     color: 'text-muted-foreground',
@@ -46,10 +68,10 @@ const statusConfig = {
     progressColor: 'bg-green-500',
     message: 'Congratulations! You\'re ready!',
   },
-}
+} as const
 
-export function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScoreCardProps) {
-  const config = statusConfig[readinessScore.status]
+export const ReadinessScoreCard = memo(function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScoreCardProps) {
+  const config = STATUS_CONFIG[readinessScore.status]
 
   if (isLoading) {
     return (
@@ -59,7 +81,7 @@ export function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScore
             <div className="h-8 w-48 bg-muted rounded animate-pulse" />
             <div className="h-32 bg-muted rounded animate-pulse" />
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
+              {SKELETON_ITEMS.map((i) => (
                 <div key={i} className="h-12 bg-muted rounded animate-pulse" />
               ))}
             </div>
@@ -71,9 +93,9 @@ export function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScore
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
+      initial={CARD_ANIMATION.initial}
+      animate={CARD_ANIMATION.animate}
+      transition={CARD_ANIMATION.transition}
     >
       <Card padding="none" className="overflow-hidden border-2 border-primary/20">
         <CardContent className="p-6 sm:p-8">
@@ -102,17 +124,17 @@ export function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScore
             <div className="flex items-center justify-center mb-4">
               <div className="relative">
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
+                  initial={SCORE_ANIMATION.initial}
+                  animate={SCORE_ANIMATION.animate}
+                  transition={SCORE_ANIMATION.transition}
                   className="text-6xl sm:text-7xl lg:text-8xl font-bold text-primary"
                 >
                   {readinessScore.overallPercent}%
                 </motion.div>
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  initial={LABEL_ANIMATION.initial}
+                  animate={LABEL_ANIMATION.animate}
+                  transition={LABEL_ANIMATION.transition}
                   className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs sm:text-sm text-muted-foreground whitespace-nowrap"
                 >
                   Overall Readiness
@@ -193,5 +215,5 @@ export function ReadinessScoreCard({ readinessScore, isLoading }: ReadinessScore
       </Card>
     </motion.div>
   )
-}
+})
 

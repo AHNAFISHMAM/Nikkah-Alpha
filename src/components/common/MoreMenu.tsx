@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { memo, useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -23,7 +23,8 @@ interface MoreMenuItem {
   adminOnly?: boolean
 }
 
-const moreMenuItems: MoreMenuItem[] = [
+// Extract constants to prevent recreation
+const MORE_MENU_ITEMS: MoreMenuItem[] = [
   { path: '/financial', label: 'Financial', icon: Calculator },
   { path: '/modules', label: 'Learn', icon: BookOpen },
   { path: '/resources', label: 'Resources', icon: Library },
@@ -31,14 +32,18 @@ const moreMenuItems: MoreMenuItem[] = [
   { path: '/manage', label: 'Manage', icon: Shield, adminOnly: true },
 ]
 
-export function MoreMenu() {
+export const MoreMenu = memo(function MoreMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
   const location = useLocation()
   const { isAdmin } = useAuth()
 
-  const visibleItems = moreMenuItems.filter(item => !item.adminOnly || isAdmin)
+  // Memoize visible items to prevent recalculation
+  const visibleItems = useMemo(() => 
+    MORE_MENU_ITEMS.filter(item => !item.adminOnly || isAdmin),
+    [isAdmin]
+  )
 
   // Calculate menu position
   useEffect(() => {
@@ -195,5 +200,5 @@ export function MoreMenu() {
       </Portal>
     </>
   )
-}
+})
 

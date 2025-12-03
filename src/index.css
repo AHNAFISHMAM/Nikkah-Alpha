@@ -141,8 +141,30 @@
   --color-islamic-gold: hsl(46 75% 72%);
   --color-islamic-purple: hsl(288 45% 45%);
   
-  /* Dark mode toast shadows */
+  /* Dark mode toast shadows and colors */
   --toast-shadow-light: var(--toast-shadow-dark);
+  
+  /* Ensure toast colors use dark mode theme */
+  --toast-bg: var(--color-card);
+  --toast-text: var(--color-card-foreground);
+  --toast-border: var(--color-border);
+  
+  /* Dark mode toast type colors */
+  --toast-success-bg: color-mix(in srgb, var(--color-success) 15%, var(--color-card));
+  --toast-success-border: var(--color-success);
+  --toast-success-text: var(--color-card-foreground);
+  
+  --toast-error-bg: color-mix(in srgb, var(--color-error) 15%, var(--color-card));
+  --toast-error-border: var(--color-error);
+  --toast-error-text: var(--color-card-foreground);
+  
+  --toast-loading-bg: color-mix(in srgb, var(--color-islamic-gold) 12%, var(--color-card));
+  --toast-loading-border: var(--color-islamic-gold);
+  --toast-loading-text: var(--color-card-foreground);
+  
+  --toast-info-bg: color-mix(in srgb, var(--color-brand) 10%, var(--color-card));
+  --toast-info-border: var(--color-brand);
+  --toast-info-text: var(--color-card-foreground);
 }
 
 /* ========================================
@@ -190,7 +212,8 @@
     color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Respect reduced motion preference */
@@ -536,6 +559,65 @@
     /* Optimize scrolling on mobile */
     body {
       -webkit-overflow-scrolling: touch;
+    }
+    
+    /* FIX: Prevent horizontal overflow on mobile */
+    /* Override 100vw width for fixed background elements */
+    main [class*="fixed"][class*="-z-10"],
+    main [class*="fixed"][class*="-z-[9]"] {
+      /* Use inset-0 approach instead of 100vw to avoid scrollbar width */
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    
+    /* Change background-attachment from fixed to scroll on mobile */
+    /* This prevents the known mobile bug with fixed backgrounds */
+    main [class*="fixed"] {
+      background-attachment: scroll !important;
+    }
+    
+    /* Ensure main container doesn't overflow */
+    main {
+      overflow-x: hidden !important;
+    }
+    
+    /* FIX: Align containers and cards properly with viewport on mobile */
+    /* Ensure container aligns perfectly with viewport edges */
+    .container {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 1rem !important; /* 16px - proper mobile padding */
+      padding-right: 1rem !important; /* 16px - proper mobile padding */
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Ensure sections don't add extra padding that causes misalignment */
+    main section.container {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+    
+    /* Ensure grid containers align properly */
+    main section .grid {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    
+    /* Ensure cards fit within viewport without overflow */
+    main section .grid > * {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
     }
   }
   :focus-visible { outline: 2px solid var(--color-islamic-gold); outline-offset: 2px; }

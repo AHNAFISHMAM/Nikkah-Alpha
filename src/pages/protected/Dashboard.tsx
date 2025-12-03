@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { SEO } from '../../components/SEO'
@@ -34,7 +35,8 @@ import { calculateReadinessScore } from '../../lib/calculations'
 import { useGentleReminders } from '../../hooks/useGentleReminders'
 import { useNetworkStatus } from '../../hooks/useNetworkStatus'
 
-const quickActions = [
+// Extract constants to prevent recreation
+const QUICK_ACTIONS = [
   {
     path: '/checklist',
     icon: CheckCircle,
@@ -67,9 +69,9 @@ const quickActions = [
     color: 'bg-gradient-to-br from-purple-500 to-purple-600',
     shadowColor: 'shadow-purple/25',
   },
-]
+] as const
 
-const containerVariants = {
+const CONTAINER_VARIANTS = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -79,14 +81,14 @@ const containerVariants = {
   },
 }
 
-const itemVariants = {
+const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
     transition: { duration: 0.5 },
   },
-}
+} as const
 
 export function Dashboard() {
   const { profile, user } = useAuth()
@@ -115,22 +117,29 @@ export function Dashboard() {
   // Auto-scroll to section when hash is present in URL
   useScrollToSection()
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'there'
-  const weddingDate = profile?.wedding_date ? new Date(profile.wedding_date) : null
-  const daysUntilWedding = weddingDate
+  // Memoize calculations to prevent unnecessary recalculations
+  const firstName = useMemo(() => profile?.full_name?.split(' ')[0] || 'there', [profile?.full_name])
+  
+  const weddingDate = useMemo(() => {
+    return profile?.wedding_date ? new Date(profile.wedding_date) : null
+  }, [profile?.wedding_date])
+  
+  const daysUntilWedding = useMemo(() => {
+    return weddingDate
     ? Math.ceil((weddingDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
+  }, [weddingDate])
 
-  // Get greeting based on time of day
-  const getGreeting = () => {
+  // Get greeting based on time of day - memoized to prevent recalculation
+  const greeting = useMemo(() => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
     if (hour < 17) return 'Good afternoon'
     return 'Good evening'
-  }
+  }, [])
 
   // Use default values if stats are loading - don't block the UI
-  const displayStats = stats || {
+  const displayStats = useMemo(() => stats || {
     checklistCompleted: 0,
     checklistTotal: 0,
     checklistPercent: 0,
@@ -142,16 +151,16 @@ export function Dashboard() {
     weddingDate: null,
     hasBudget: false,
     budgetAmount: null,
-  }
+  }, [stats])
 
-  // Calculate combined readiness score
-  const readinessScore = calculateReadinessScore({
+  // Calculate combined readiness score - memoized
+  const readinessScore = useMemo(() => calculateReadinessScore({
     checklistPercent: displayStats.checklistPercent,
     modulesCompleted: displayStats.modulesCompleted,
     modulesTotal: displayStats.modulesTotal,
     discussionsCompleted: displayStats.discussionsCompleted,
     discussionsTotal: displayStats.discussionsTotal,
-  })
+  }), [displayStats])
 
   return (
     <>
@@ -177,7 +186,7 @@ export function Dashboard() {
                 <span>Assalamu Alaikum</span>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-2">
-                {getGreeting()}, {firstName}!
+                {greeting}, {firstName}!
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Continue your marriage preparation journey
@@ -240,13 +249,13 @@ export function Dashboard() {
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={containerVariants}
+            variants={CONTAINER_VARIANTS}
             className="grid grid-cols-2 sm:grid-cols-4 gap-0 overflow-hidden rounded-2xl border-2 border-border"
           >
-            {quickActions.map((action, index) => (
+            {QUICK_ACTIONS.map((action, index) => (
               <motion.div 
                 key={action.path} 
-                variants={itemVariants}
+                variants={ITEM_VARIANTS}
                 className={cn(
                   "relative",
                   index > 0 && "border-l border-border",

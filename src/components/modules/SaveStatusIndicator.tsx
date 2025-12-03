@@ -1,7 +1,43 @@
+import { memo, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 import { Button } from '../ui/Button'
 import type { SaveStatus } from '../../hooks/useAutoSaveNotes'
+
+// Extract constants to prevent recreation
+const STATUS_ANIMATION = {
+  initial: { opacity: 0, y: -4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.2 },
+} as const
+
+const STATUS_CONFIG = {
+  idle: {
+    icon: CheckCircle2,
+    text: 'All changes saved',
+    className: 'bg-muted/50 text-muted-foreground',
+    iconClassName: 'text-muted-foreground',
+  },
+  saving: {
+    icon: Loader2,
+    text: 'Saving...',
+    className: 'bg-islamic-gold/10 dark:bg-islamic-gold/20 text-islamic-gold dark:text-islamic-gold',
+    iconClassName: 'text-islamic-gold dark:text-islamic-gold',
+  },
+  saved: {
+    icon: CheckCircle2,
+    text: 'Saved',
+    className: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+    iconClassName: 'text-green-600 dark:text-green-500',
+  },
+  error: {
+    icon: AlertCircle,
+    text: 'Failed to save',
+    className: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+    iconClassName: 'text-red-600 dark:text-red-500',
+  },
+} as const
 
 export interface SaveStatusIndicatorProps {
   status: SaveStatus
@@ -16,15 +52,15 @@ export interface SaveStatusIndicatorProps {
  * Displays current save state with appropriate icons and colors
  * Minimum 44px touch target for mobile accessibility
  */
-export function SaveStatusIndicator({
+export const SaveStatusIndicator = memo(function SaveStatusIndicator({
   status,
   lastSavedAt,
   hasUnsavedChanges,
   onRetry,
   className = '',
 }: SaveStatusIndicatorProps) {
-  // Format time ago (e.g., "2s ago", "1m ago")
-  const formatTimeAgo = (date: Date | null): string => {
+  // Memoize format time ago function
+  const formatTimeAgo = useCallback((date: Date | null): string => {
     if (!date) return ''
     
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -33,52 +69,29 @@ export function SaveStatusIndicator({
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
     return `${Math.floor(seconds / 86400)}d ago`
-  }
+  }, [])
 
   // Don't show if idle and no unsaved changes
   if (status === 'idle' && !hasUnsavedChanges) {
     return null
   }
 
-  const statusConfig = {
-    idle: {
-      icon: CheckCircle2,
-      text: 'All changes saved',
-      className: 'bg-muted/50 text-muted-foreground',
-      iconClassName: 'text-muted-foreground',
-    },
-    saving: {
-      icon: Loader2,
-      text: 'Saving...',
-      className: 'bg-islamic-gold/10 dark:bg-islamic-gold/20 text-islamic-gold dark:text-islamic-gold',
-      iconClassName: 'text-islamic-gold dark:text-islamic-gold',
-    },
-    saved: {
-      icon: CheckCircle2,
-      text: 'Saved',
-      className: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
-      iconClassName: 'text-green-600 dark:text-green-500',
-    },
-    error: {
-      icon: AlertCircle,
-      text: 'Failed to save',
-      className: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
-      iconClassName: 'text-red-600 dark:text-red-500',
-    },
-  }
-
-  const config = statusConfig[status]
+  // Memoize config and timeAgo
+  const config = useMemo(() => STATUS_CONFIG[status], [status])
   const Icon = config.icon
-  const timeAgo = status === 'saved' && lastSavedAt ? formatTimeAgo(lastSavedAt) : ''
+  const timeAgo = useMemo(() => 
+    status === 'saved' && lastSavedAt ? formatTimeAgo(lastSavedAt) : '',
+    [status, lastSavedAt, formatTimeAgo]
+  )
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={status}
-        initial={{ opacity: 0, y: -4 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -4 }}
-        transition={{ duration: 0.2 }}
+        initial={STATUS_ANIMATION.initial}
+        animate={STATUS_ANIMATION.animate}
+        exit={STATUS_ANIMATION.exit}
+        transition={STATUS_ANIMATION.transition}
         className={`flex items-center justify-between gap-2 px-3 py-2.5 sm:py-2 rounded-lg text-sm min-h-[44px] sm:min-h-[36px] ${config.className} ${className}`}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -117,5 +130,5 @@ export function SaveStatusIndicator({
       </motion.div>
     </AnimatePresence>
   )
-}
+})
 
