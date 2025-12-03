@@ -1,0 +1,37 @@
+{
+  "name": "NikahPrep - Islamic Marriage Preparation",
+  "short_name": "NikahPrep",
+  "description": "Prepare for your blessed union with comprehensive Islamic marriage preparation tools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00FF87",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "education", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your marriage preparation progress",
+      "url": "/dashboard",
+      "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Checklist",
+      "short_name": "Checklist",
+      "description": "Track your preparation checklist",
+      "url": "/checklist",
+      "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}
+

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <!-- Mobile-First Viewport: Optimized for mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="theme-color" content="#00FF87" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="NikahPrep" />
+    <meta name="description" content="NikahPrep - Islamic Marriage Preparation App" />
+    <!-- Prevent iOS Safari from auto-formatting phone numbers -->
+    <meta name="format-detection" content="telephone=no" />
+    <title>NikahPrep - Prepare for Your Blessed Union</title>
+    <!-- PWA Manifest for mobile install -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/logo.svg" />
+    <!-- Additional favicon sizes for better compatibility -->
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/logo.svg" />
+    <!-- Force light mode on HTML element -->
+    <script>
+      // Force light mode immediately before React loads
+      (function() {
+        const root = document.documentElement;
+        root.classList.remove('dark');
+        root.classList.add('light');
+        root.setAttribute('data-theme', 'light');
+        // Clear any saved dark theme preference
+        try {
+          const savedTheme = localStorage.getItem('nikah-alpha-theme');
+          if (savedTheme === 'dark') {
+            localStorage.setItem('nikah-alpha-theme', 'light');
+          }
+        } catch(e) {}
+      })();
+    </script>
+    <!-- Theme Preloading: Prevents FOUC (Flash of Unstyled Content) -->
+    <style>
+      :root {
+        /* Default emerald theme - will be overridden by ThemeContext */
+        --color-brand: #10b981;
+        --color-brand-accent: #34d399;
+        --color-brand-soft: rgba(16, 185, 129, 0.15);
+        --gradient-brand: linear-gradient(90deg, #10b981, #34d399);
+        --color-primary: #10b981;
+        --color-success: #10b981;
+        /* Base colors */
+        --color-background: hsl(35 25% 99%);
+        --color-foreground: hsl(20 15% 15%);
+      }
+      /* Prevent FOUC */
+      body {
+        background-color: var(--color-background);
+        color: var(--color-foreground);
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      /* Respect reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        body {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="light" data-theme="light">
+    <div id="root"></div>
+    <!-- Portal container for react-datepicker to prevent overflow issues -->
+    <div id="react-datepicker-root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

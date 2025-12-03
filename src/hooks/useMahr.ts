@@ -1,0 +1,99 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+import { logError } from '../lib/error-handler'
+import type { Database } from '../types/database'
+import { useAuth } from '../contexts/AuthContext'
+import toast from 'react-hot-toast'
+import confetti from 'canvas-confetti'
+
+type Mahr = Database['public']['Tables']['mahr']['Row']
+type MahrInsert = Database['public']['Tables']['mahr']['Insert']
+type MahrUpdate = Database['public']['Tables']['mahr']['Update']
+
+export function useMahr() {
+  const { user } = useAuth()
+
+  return useQuery({
+    queryKey: ['mahr', user?.id],
+    queryFn: async (): Promise<Mahr | null> => {
+      if (!user?.id) return null
+      if (!supabase) throw new Error('Supabase is not configured')
+
+      const { data, error } = await supabase
+        .from('mahr')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        logError(error, 'useMahr')
+        throw error
+      }
+
+      return data as Mahr | null
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export function useUpdateMahr() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (updates: MahrUpdate): Promise<Mahr> => {
+      if (!user?.id) throw new Error('User not authenticated')
+      if (!supabase) throw new Error('Supabase is not configured')
+
+      // Auto-calculate status based on amount_paid and amount
+      let status: 'Paid' | 'Pending' | 'Partial' = 'Pending'
+      const amount = updates.amount ?? 0
+      const amountPaid = updates.amount_paid ?? 0
+
+      if (amountPaid >= amount && amount > 0) {
+        status = 'Paid'
+      } else if (amountPaid > 0) {
+        status = 'Partial'
+      } else {
+        status = 'Pending'
+      }
+
+      const { data, error } = await supabase
+        .from('mahr')
+        .upsert(
+          {
+            user_id: user.id,
+            ...updates,
+            status,
+          } as MahrInsert,
+          {
+            onConflict: 'user_id',
+          }
+        )
+        .select()
+        .single()
+
+      if (error) {
+        logError(error, 'useUpdateMahr')
+        throw error
+      }
+
+      return data as Mahr
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mahr'] })
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'],
+      })
+      toast.success('Mashallah! Mahr information saved! 💍')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to save mahr information')
+    },
+  })
+}
+

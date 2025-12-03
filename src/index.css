@@ -1,0 +1,1797 @@
+@import "tailwindcss";
+
+@theme {
+  --breakpoint-xs: 375px;
+  --color-brand: #00FF87;
+  --color-brand-accent: #60EFFF;
+  --color-brand-soft: color-mix(in srgb, #00FF87 15%, transparent);
+  --gradient-brand: linear-gradient(90deg, #00FF87, #60EFFF);
+  --color-primary: var(--color-brand);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-background: hsl(35 25% 99%);
+  --color-foreground: hsl(20 15% 15%);
+  --color-card: hsl(35 20% 100%);
+  --color-card-foreground: hsl(20 15% 15%);
+  --color-popover: hsl(35 20% 100%);
+  --color-popover-foreground: hsl(20 15% 15%);
+  --color-secondary: hsl(35 15% 95%);
+  --color-secondary-foreground: hsl(20 15% 20%);
+  --color-muted: hsl(35 15% 95%);
+  --color-muted-foreground: hsl(20 10% 45%);
+  --color-accent: hsl(35 20% 94%);
+  --color-accent-foreground: hsl(20 15% 20%);
+  --color-destructive: hsl(0 65% 55%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(35 20% 88%);
+  --color-input: hsl(35 20% 88%);
+  --color-ring: hsl(46 72% 68%);
+  --color-islamic-gold: hsl(46 72% 68%);
+  --color-islamic-green: var(--color-brand);
+  --color-islamic-purple: hsl(288 50% 35%);
+  --color-success: var(--color-brand);
+  --color-success-foreground: hsl(0 0% 100%);
+  --color-warning: hsl(46 72% 68%);
+  --color-warning-foreground: hsl(20 15% 15%);
+  --color-error: hsl(0 65% 55%);
+  --color-error-foreground: hsl(0 0% 100%);
+  --color-info: hsl(210 70% 55%);
+  --color-info-foreground: hsl(0 0% 100%);
+  --radius-sm: 0.375rem;
+  --radius: 0.75rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px 0 hsl(35 20% 50% / 0.05);
+  --shadow: 0 1px 3px 0 hsl(35 20% 50% / 0.1), 0 1px 2px -1px hsl(35 20% 50% / 0.1);
+  --shadow-md: 0 4px 6px -1px hsl(35 20% 50% / 0.1), 0 2px 4px -2px hsl(35 20% 50% / 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(35 20% 50% / 0.1), 0 4px 6px -4px hsl(35 20% 50% / 0.1);
+  --shadow-xl: 0 20px 25px -5px hsl(35 20% 50% / 0.1), 0 8px 10px -6px hsl(35 20% 50% / 0.1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --font-size-sm: clamp(0.8125rem, 0.75rem + 0.3125vw, 0.9375rem);
+  --font-size-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --font-size-lg: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --font-size-xl: clamp(1.125rem, 0.95rem + 0.875vw, 1.25rem);
+  --font-size-2xl: clamp(1.25rem, 1rem + 1.25vw, 1.5rem);
+  --font-size-3xl: clamp(1.5rem, 1rem + 2.5vw, 1.875rem);
+  --font-size-4xl: clamp(1.875rem, 1.25rem + 3.125vw, 2.25rem);
+  --font-size-5xl: clamp(2.25rem, 1.5rem + 3.75vw, 3rem);
+  --font-size-6xl: clamp(2.75rem, 1.5rem + 6.25vw, 3.75rem);
+  --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.375rem);
+  --space-sm: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+  --space-md: clamp(0.75rem, 0.6rem + 0.75vw, 1rem);
+  --space-lg: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  --space-xl: clamp(1.5rem, 1rem + 2.5vw, 2.5rem);
+  --space-2xl: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-sidebar: 40;
+  --z-navbar: 100; /* Navbar should be above all content */
+  --z-modal-backdrop: 50;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+}
+
+
+:root { 
+  --radius: 0.75rem;
+  
+  /* Toast-specific CSS Variables - Theme-Aware, High Visibility */
+  --toast-bg: var(--color-card);
+  --toast-text: var(--color-card-foreground);
+  --toast-border: var(--color-border);
+  --toast-shadow-light: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --toast-shadow-dark: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --toast-shadow-mobile: 0 12px 30px -5px rgba(0, 0, 0, 0.25), 0 10px 12px -6px rgba(0, 0, 0, 0.15);
+  
+  /* Success Toast - Green theme */
+  --toast-success-bg: color-mix(in srgb, var(--color-success) 15%, var(--color-card));
+  --toast-success-border: var(--color-success);
+  --toast-success-text: var(--color-card-foreground);
+  
+  /* Error Toast - Red theme */
+  --toast-error-bg: color-mix(in srgb, var(--color-error) 15%, var(--color-card));
+  --toast-error-border: var(--color-error);
+  --toast-error-text: var(--color-card-foreground);
+  
+  /* Loading Toast - Gold accent */
+  --toast-loading-bg: color-mix(in srgb, var(--color-islamic-gold) 12%, var(--color-card));
+  --toast-loading-border: var(--color-islamic-gold);
+  --toast-loading-text: var(--color-card-foreground);
+  
+  /* Default/Info Toast - Green accent */
+  --toast-info-bg: color-mix(in srgb, var(--color-brand) 10%, var(--color-card));
+  --toast-info-border: var(--color-brand);
+  --toast-info-text: var(--color-card-foreground);
+}
+
+.dark {
+  --color-background: hsl(25 15% 8%);
+  --color-foreground: hsl(35 20% 95%);
+  --color-card: hsl(25 12% 12%);
+  --color-card-foreground: hsl(35 20% 95%);
+  --color-popover: hsl(25 12% 12%);
+  --color-popover-foreground: hsl(35 20% 95%);
+  /* Note: --color-primary and --color-success use var(--color-brand) which is set by green theme selectors */
+  --color-primary: var(--color-brand);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(25 10% 18%);
+  --color-secondary-foreground: hsl(35 20% 90%);
+  --color-muted: hsl(25 10% 18%);
+  --color-muted-foreground: hsl(35 15% 60%);
+  --color-accent: hsl(25 12% 20%);
+  --color-accent-foreground: hsl(35 20% 90%);
+  --color-destructive: hsl(0 60% 45%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(25 10% 22%);
+  --color-input: hsl(25 10% 22%);
+  --color-ring: hsl(46 75% 72%);
+  --color-success: var(--color-brand);
+  --color-warning: hsl(46 75% 72%);
+  --color-error: hsl(0 60% 50%);
+  --color-info: hsl(210 65% 50%);
+  --color-islamic-green: var(--color-brand);
+  --color-islamic-gold: hsl(46 75% 72%);
+  --color-islamic-purple: hsl(288 45% 45%);
+  
+  /* Dark mode toast shadows */
+  --toast-shadow-light: var(--toast-shadow-dark);
+}
+
+/* ========================================
+   Toast Notifications - Theme-Aware, Mobile-First
+   ======================================== */
+
+/* Toast Base Container */
+.react-hot-toast {
+  z-index: 9999 !important;
+  position: relative !important; /* Changed from fixed to relative for proper stacking */
+  pointer-events: none !important;
+  margin-bottom: 0 !important; /* Remove default margin */
+}
+
+/* Toast Container - Responsive positioning with proper stacking */
+.react-hot-toast-container {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 90vw !important;
+  width: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important; /* Spacing between toasts */
+  align-items: center !important; /* Center align for bottom-center position */
+}
+
+/* Base Toast Styling - Theme-Aware, High Visibility */
+.react-hot-toast > div {
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  background-color: var(--toast-bg) !important;
+  color: var(--toast-text) !important;
+  border: 1.5px solid var(--toast-border) !important; /* Thicker border for visibility */
+  box-shadow: var(--toast-shadow-light) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  min-width: 280px !important;
+  margin-bottom: 0 !important; /* Remove default margin, use gap instead */
+  /* Removed backdrop-filter for solid backgrounds - better visibility */
+  transition: 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .react-hot-toast > div {
+    transition: none !important;
+  }
+}
+
+/* Success Toast - Green theme */
+.react-hot-toast > div[data-type="success"],
+.react-hot-toast > div[class*="toast-success"] {
+  background-color: var(--toast-success-bg) !important;
+  border-color: var(--toast-success-border) !important;
+  border-width: 1.5px !important;
+  color: var(--toast-success-text) !important;
+}
+
+/* Error Toast - Red theme */
+.react-hot-toast > div[data-type="error"],
+.react-hot-toast > div[class*="toast-error"] {
+  background-color: var(--toast-error-bg) !important;
+  border-color: var(--toast-error-border) !important;
+  border-width: 1.5px !important;
+  color: var(--toast-error-text) !important;
+}
+
+/* Loading Toast - Gold accent */
+.react-hot-toast > div[data-type="loading"],
+.react-hot-toast > div[class*="toast-loading"] {
+  background-color: var(--toast-loading-bg) !important;
+  border-color: var(--toast-loading-border) !important;
+  border-width: 1.5px !important;
+  color: var(--toast-loading-text) !important;
+}
+
+/* Default/Info Toast - Green accent (for regular toasts) */
+.react-hot-toast > div:not([data-type]):not([class*="toast-success"]):not([class*="toast-error"]):not([class*="toast-loading"]) {
+  background-color: var(--toast-info-bg) !important;
+  border-color: var(--toast-info-border) !important;
+  border-width: 1.5px !important;
+  color: var(--toast-info-text) !important;
+}
+
+/* Mobile: Bottom-center above bottom nav */
+@media (max-width: 1023px) {
+  .react-hot-toast-container {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: auto !important;
+    right: auto !important;
+    padding: 0 16px !important;
+    gap: 12px !important; /* Spacing between stacked toasts on mobile */
+    max-height: calc(100vh - 120px - env(safe-area-inset-bottom, 0px)) !important; /* Prevent overflow */
+    overflow-y: auto !important; /* Allow scrolling if too many toasts */
+    overflow-x: hidden !important;
+  }
+  
+  .react-hot-toast > div {
+    min-width: 280px !important;
+    max-width: calc(100vw - 32px) !important;
+    width: 100% !important; /* Full width within container */
+    font-size: 14px !important;
+    padding: 14px 18px !important; /* Larger for mobile touch */
+    border-width: 2px !important; /* Thicker border for mobile visibility */
+    box-shadow: var(--toast-shadow-mobile) !important; /* Stronger shadow for mobile */
+    margin-bottom: 0 !important; /* Remove margin, use gap from container */
+    flex-shrink: 0 !important; /* Prevent shrinking */
+  }
+  
+  /* Ensure toasts stack vertically without overlap */
+  .react-hot-toast {
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Desktop: Top-right */
+@media (min-width: 1024px) {
+  .react-hot-toast-container {
+    top: 20px !important;
+    right: 20px !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    gap: 10px !important; /* Spacing between stacked toasts on desktop */
+    align-items: flex-end !important; /* Right align for top-right position */
+    max-height: calc(100vh - 40px) !important; /* Prevent overflow */
+    overflow-y: auto !important; /* Allow scrolling if too many toasts */
+    overflow-x: hidden !important;
+  }
+  
+  .react-hot-toast > div {
+    min-width: 300px !important;
+    max-width: 400px !important;
+    width: auto !important;
+    padding: 12px 16px !important;
+    border-width: 1.5px !important;
+    margin-bottom: 0 !important; /* Remove margin, use gap from container */
+    flex-shrink: 0 !important; /* Prevent shrinking */
+  }
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html {
+    overflow-x: hidden;
+    overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+    width: 100%;
+    height: 100%;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+    scroll-behavior: smooth;
+    /* Mobile-first: Use dynamic viewport height for mobile browsers */
+    height: 100dvh;
+    min-height: 100vh;
+    /* Optimize scrolling performance */
+    -webkit-overflow-scrolling: touch;
+    /* Custom branded scrollbar - uses theme variables */
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 30%, transparent) transparent;
+    /* Create stacking context for fixed elements */
+    position: relative;
+  }
+
+  html::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 30%, transparent), color-mix(in srgb, var(--color-brand-accent) 30%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s ease;
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 50%, transparent), color-mix(in srgb, var(--color-brand-accent) 50%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  html::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 70%, transparent), color-mix(in srgb, var(--color-brand-accent) 70%, transparent));
+  }
+  
+  /* Dark mode scrollbar */
+  .dark {
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 40%, transparent) transparent;
+  }
+  
+  .dark html::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 40%, transparent), color-mix(in srgb, var(--color-brand-accent) 40%, transparent));
+  }
+  
+  .dark html::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 60%, transparent), color-mix(in srgb, var(--color-brand-accent) 60%, transparent));
+  }
+  
+  .dark html::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 80%, transparent), color-mix(in srgb, var(--color-brand-accent) 80%, transparent));
+  }
+
+  /* Mobile: thinner scrollbar */
+  @media (max-width: 768px) {
+    html::-webkit-scrollbar {
+      width: 4px;
+    }
+  }
+  
+  /* Hide HTML scrollbar when dashboard layout is active */
+  html.dashboard-layout-active {
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Ensure body doesn't create additional scrollbar */
+  html.dashboard-layout-active body {
+    overflow: hidden !important;
+  }
+  
+  /* Ensure main content scrollbar is visible and styled */
+  html.dashboard-layout-active main {
+    /* Main scrollbar styling is already handled by scrollbar-thin class */
+    overflow-y: auto !important;
+  }
+  
+  /* Mobile: Ensure proper scrollbar behavior */
+  @media (max-width: 640px) {
+    html.dashboard-layout-active {
+      overflow-y: hidden !important;
+      overflow-x: hidden !important;
+    }
+    
+    html.dashboard-layout-active body {
+      overflow: hidden !important;
+    }
+    
+    /* Ensure main content can scroll on mobile */
+    html.dashboard-layout-active main {
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto !important;
+    }
+  }
+  
+  /* Smooth transition when toggling */
+  html {
+    transition: overflow-y 0.2s ease;
+  }
+  
+  body { 
+    background-color: var(--color-background); 
+    color: var(--color-foreground); 
+    font-feature-settings: "rlig" 1, "calt" 1; 
+    -webkit-font-smoothing: antialiased; 
+    -moz-osx-font-smoothing: grayscale; 
+    overflow-x: hidden; 
+    overflow-y: visible; /* Let html handle scrolling, body is just a container */
+    /* Mobile-first: Use dynamic viewport height */
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none; 
+    margin: 0; 
+    padding: 0;
+    width: 100%;
+    /* Prevent text size adjustment on iOS */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Touch optimization */
+    touch-action: pan-y;
+    /* Smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Create stacking context */
+    position: relative;
+  }
+  #root { 
+    /* Mobile-first: Use dynamic viewport height */
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: visible; /* Let html handle scrolling, root is just a container */
+    /* Create stacking context for fixed elements */
+    position: relative;
+    isolation: isolate; /* Create new stacking context */
+  }
+  /* Mobile-first: Base font size for mobile (prevents zoom on input focus) */
+  input, select, textarea { 
+    font-size: 16px; 
+    /* Prevent iOS zoom on input focus */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* Desktop: Use inherited font size */
+  @media (min-width: 640px) { 
+    input, select, textarea { 
+      font-size: inherit; 
+    } 
+  }
+  
+  /* Input icon fixes - prevent squashing */
+  /* Icons in input fields should maintain their natural size */
+  .relative > div[class*="absolute"] svg,
+  .relative > div[class*="absolute"] [class*="lucide"] {
+    display: block !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  
+  /* Ensure icon containers don't constrain icon size */
+  .relative > div[class*="absolute"] > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Button icon fixes - prevent squashing */
+  button span[class*="shrink-0"] svg,
+  button span[class*="shrink-0"] [class*="lucide"] {
+    display: block;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+  }
+  
+  /* General icon fixes - ensure all icons maintain aspect ratio */
+  svg[class*="lucide"],
+  [class*="lucide"] svg {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+  }
+  
+  /* Mobile-first: Base styles are for mobile, then enhance for larger screens */
+  
+  /* Tablet and up (640px+) */
+  @media (min-width: 640px) {
+    html, body {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+  
+  /* Desktop (1024px+) */
+  @media (min-width: 1024px) {
+    html, body {
+      width: 100%;
+      max-width: 100%;
+    }
+    #root {
+      width: 100%;
+      max-width: 100%;
+    }
+    /* Force desktop sidebar to show */
+    aside[class*="hidden lg:flex"] {
+      display: flex !important;
+    }
+    /* Hide mobile nav on desktop */
+    nav[class*="lg:hidden"] {
+      display: none !important;
+    }
+  }
+  
+  /* Mobile-specific optimizations */
+  @media (max-width: 639px) {
+    /* Ensure full width on mobile */
+    * {
+      max-width: 100%;
+    }
+    /* Optimize scrolling on mobile */
+    body {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+  :focus-visible { outline: 2px solid var(--color-islamic-gold); outline-offset: 2px; }
+  ::selection { background-color: hsl(158 64% 45% / 0.2); color: inherit; }
+  a, button, [role="button"], [role="link"], input[type="button"], input[type="submit"], input[type="reset"], label[for] { cursor: pointer; }
+  button:disabled, [role="button"][aria-disabled="true"], a[aria-disabled="true"] { cursor: not-allowed; }
+}
+
+@layer utilities {
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  
+  /* Scrollbar none utility - completely hide scrollbar */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-isolate { overscroll-behavior: contain; }
+  .scroll-x { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .scroll-y {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    /* Optimize scroll performance */
+    will-change: scroll-position;
+  }
+  .scroll-none { overflow: hidden; }
+  /* Smooth scroll container */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  /* Compact scrollbar for better UX - theme-aware */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-brand) 25%, transparent);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-brand) 45%, transparent);
+  }
+  
+  /* Dark mode scrollbar-thin */
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-brand) 35%, transparent);
+  }
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-brand) 55%, transparent);
+  }
+
+  /* Custom scrollbar styles for home page and app - theme-aware */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 30%, transparent) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 30%, transparent), color-mix(in srgb, var(--color-brand-accent) 30%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 50%, transparent), color-mix(in srgb, var(--color-brand-accent) 50%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 70%, transparent), color-mix(in srgb, var(--color-brand-accent) 70%, transparent));
+  }
+  
+  /* Dark mode custom-scrollbar */
+  .dark .custom-scrollbar {
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 40%, transparent) transparent;
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 40%, transparent), color-mix(in srgb, var(--color-brand-accent) 40%, transparent));
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 60%, transparent), color-mix(in srgb, var(--color-brand-accent) 60%, transparent));
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 80%, transparent), color-mix(in srgb, var(--color-brand-accent) 80%, transparent));
+  }
+
+  /* Hide scrollbar on mobile for cleaner look */
+  @media (max-width: 768px) {
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+  }
+  .safe-area-inset-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-inset-top { padding-top: env(safe-area-inset-top); }
+  .safe-area-inset-left { padding-left: env(safe-area-inset-left); }
+  .safe-area-inset-right { padding-right: env(safe-area-inset-right); }
+  
+  /* Custom scrollbar for tab content - matches app-wide scrollbar styling */
+  .tab-content-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 30%, transparent) transparent;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scroll-behavior: smooth;
+  }
+  
+  .tab-content-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .tab-content-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+  
+  .tab-content-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 30%, transparent), color-mix(in srgb, var(--color-brand-accent) 30%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s ease;
+  }
+  
+  .tab-content-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 50%, transparent), color-mix(in srgb, var(--color-brand-accent) 50%, transparent));
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  
+  .tab-content-scroll::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 70%, transparent), color-mix(in srgb, var(--color-brand-accent) 70%, transparent));
+  }
+  
+  /* Dark mode tab scrollbar */
+  .dark .tab-content-scroll {
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 40%, transparent) transparent;
+  }
+  
+  .dark .tab-content-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 40%, transparent), color-mix(in srgb, var(--color-brand-accent) 40%, transparent));
+  }
+  
+  .dark .tab-content-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 60%, transparent), color-mix(in srgb, var(--color-brand-accent) 60%, transparent));
+  }
+  
+  .dark .tab-content-scroll::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 80%, transparent), color-mix(in srgb, var(--color-brand-accent) 80%, transparent));
+  }
+  
+  /* Mobile: thinner scrollbar for tab content */
+  @media (max-width: 768px) {
+    .tab-content-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+  }
+  
+  /* Tab slider container - ensures proper clipping */
+  .tab-slider-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    /* Prevent content overflow */
+    contain: layout style paint;
+  }
+  
+  .tab-slider-content {
+    display: flex;
+    height: 100%;
+    /* Ensure smooth transforms */
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .tab-panel {
+    flex-shrink: 0;
+    /* Allow vertical scrolling */
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Ensure proper stacking */
+    position: relative;
+    /* Critical for flex scrolling - allows flex children to shrink below content size */
+    min-height: 0;
+    /* Ensure scrolling works on touch devices */
+    -webkit-overflow-scrolling: touch;
+  }
+  .h-screen-dynamic { height: 100vh; height: 100dvh; }
+  .h-screen-stable { height: 100vh; height: 100svh; }
+  .min-h-screen-dynamic { min-height: 100vh; min-height: 100dvh; }
+  .will-change-transform { will-change: transform; }
+  .gpu-accelerate { transform: translateZ(0); backface-visibility: hidden; }
+  /* Mobile-first: Touch targets (minimum 44x44px for iOS, 48x48px recommended) */
+  .touch-target { 
+    min-height: 48px; 
+    min-width: 48px; 
+    /* Ensure touch targets are easily tappable */
+    touch-action: manipulation;
+  }
+  .touch-target-sm { 
+    min-height: 44px; 
+    min-width: 44px; 
+    touch-action: manipulation;
+  }
+  /* Mobile-first: Prevent double-tap zoom on buttons */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .text-fluid-xs { font-size: var(--font-size-xs); }
+  .text-fluid-sm { font-size: var(--font-size-sm); }
+  .text-fluid-base { font-size: var(--font-size-base); }
+  .text-fluid-lg { font-size: var(--font-size-lg); }
+  .text-fluid-xl { font-size: var(--font-size-xl); }
+  .text-fluid-2xl { font-size: var(--font-size-2xl); }
+  .text-fluid-3xl { font-size: var(--font-size-3xl); }
+  .text-fluid-4xl { font-size: var(--font-size-4xl); }
+  .text-fluid-5xl { font-size: var(--font-size-5xl); }
+  .text-fluid-6xl { font-size: var(--font-size-6xl); }
+  .px-responsive { padding-left: var(--space-md); padding-right: var(--space-md); }
+  .py-responsive { padding-top: var(--space-lg); padding-bottom: var(--space-lg); }
+  .p-responsive { padding: var(--space-md); }
+  .gap-responsive { gap: var(--space-md); }
+  .card-padding { padding: 0.75rem; }
+  @media (min-width: 640px) { .card-padding { padding: 1rem; } }
+  @media (min-width: 1024px) { .card-padding { padding: 1.5rem; } }
+  .text-truncate-2 { 
+    display: -webkit-box; 
+    -webkit-line-clamp: 2; 
+    line-clamp: 2;
+    -webkit-box-orient: vertical; 
+    overflow: hidden; 
+  }
+  .text-truncate-3 { 
+    display: -webkit-box; 
+    -webkit-line-clamp: 3; 
+    line-clamp: 3;
+    -webkit-box-orient: vertical; 
+    overflow: hidden; 
+  }
+  .text-success { color: var(--color-success); }
+  .text-brand { color: var(--color-brand); }
+  .text-warning { color: var(--color-warning); }
+  .text-error { color: var(--color-error); }
+  .text-info { color: var(--color-info); }
+  .bg-success { background-color: var(--color-success); }
+  .bg-warning { background-color: var(--color-warning); }
+  .bg-error { background-color: var(--color-error); }
+  .bg-info { background-color: var(--color-info); }
+  .bg-islamic-gold { background-color: var(--color-islamic-gold); }
+  .bg-islamic-green { background: var(--gradient-brand); }
+  .bg-islamic-purple { background-color: var(--color-islamic-purple); }
+  .bg-brand, .gradient-brand { background: var(--gradient-brand); }
+  .bg-brand-soft { background: var(--color-brand-soft); }
+  .icon-chip { background: var(--gradient-brand); color: #fff; }
+  .bg-badge-gradient { background: linear-gradient(90deg, var(--color-islamic-gold), color-mix(in srgb, var(--color-islamic-gold) 90%, white)); }
+  /* Vertical brand gradient for auth pages */
+  .bg-brand-gradient-vertical {
+    background: linear-gradient(to bottom, var(--color-brand), color-mix(in srgb, var(--color-brand) 80%, black), color-mix(in srgb, var(--color-brand) 60%, black));
+  }
+  .text-islamic-gold { color: var(--color-islamic-gold); }
+  .text-islamic-green { color: var(--color-brand); }
+  .text-islamic-purple { color: var(--color-islamic-purple); }
+  .gradient-islamic { background: var(--gradient-brand); }
+  .glass { background: hsl(0 0% 100% / 0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .dark .glass { background: hsl(25 12% 12% / 0.8); }
+  .z-base { z-index: var(--z-base); }
+  .z-dropdown { z-index: var(--z-dropdown); }
+  .z-sticky { z-index: var(--z-sticky); }
+  .z-fixed { z-index: var(--z-fixed); }
+  .z-sidebar { z-index: var(--z-sidebar); }
+  .z-navbar { z-index: var(--z-navbar); }
+  .z-modal-backdrop { z-index: var(--z-modal-backdrop); }
+  .z-modal { z-index: var(--z-modal); }
+  .z-popover { z-index: var(--z-popover); }
+  .z-tooltip { z-index: var(--z-tooltip); }
+  
+  /* Ensure fixed header/navbar elements create proper stacking context */
+  header.fixed,
+  nav.fixed,
+  header[class*="fixed"],
+  nav[class*="fixed"] {
+    transform: translateZ(0); /* Force GPU acceleration and new stacking context */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .animate-shimmer { background: linear-gradient(90deg, var(--color-muted) 25%, hsl(35 20% 92%) 50%, var(--color-muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .animate-fade-in { animation: fade-in 0.3s ease-out; }
+  @keyframes slide-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-slide-up { animation: slide-up 0.3s ease-out; }
+  @keyframes slide-down { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+  .animate-slide-down { animation: slide-down 0.4s ease-out; }
+  @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .animate-scale-in { animation: scale-in 0.2s ease-out; }
+  @keyframes pulse-glow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.85; } }
+  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; will-change: transform, opacity; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .animate-spin { animation: spin 1s linear infinite; }
+}
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+
+@layer components {
+  .card-hover { transition: all 0.2s ease; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .list-item-interactive { transition: all 0.15s ease; }
+  .list-item-interactive:hover { background-color: var(--color-accent); }
+  .btn-glow:hover { box-shadow: 0 0 20px hsl(158 64% 45% / 0.3); }
+  .border-gold-accent { border-color: var(--color-islamic-gold); }
+  .progress-islamic { background: var(--gradient-brand); }
+  /* Module printable worksheet (ModuleDetail) */
+  .worksheet-print {
+    display: none;
+  }
+
+  .worksheet {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 0;
+  }
+
+  .worksheet-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.75rem;
+  }
+
+  .worksheet-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .worksheet-subtitle {
+    font-size: 0.9rem;
+    color: hsl(20 10% 45%);
+  }
+
+  .worksheet-section {
+    margin-top: 1.25rem;
+    page-break-inside: avoid;
+  }
+
+  .worksheet-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .worksheet-footer {
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    color: hsl(20 10% 45%);
+    border-top: 1px solid #ddd;
+    padding-top: 0.75rem;
+    page-break-inside: avoid;
+  }
+}
+
+/* ========================================
+   Print Styles - Educational Content Best Practices
+   ======================================== */
+
+@media print {
+  /* Page Setup - A4 format with proper margins */
+  @page {
+    size: A4;
+    margin: 1.5cm 2cm;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Base Styles */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+    background: white;
+  }
+
+  /* Allow content to flow across multiple pages:
+     remove viewport-locked heights and scroll containers in print. */
+  #root,
+  main,
+  .module-page-root,
+  .h-screen,
+  .min-h-screen,
+  .max-h-screen,
+  .h-screen-dynamic,
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  .overflow-hidden {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure animated elements are visible when printing */
+  body *,
+  body *::before,
+  body *::after {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  /* Hide Non-Essential Elements */
+  .print\:hidden,
+  nav,
+  .dashboard-nav,
+  aside,
+  button:not(.keep-print),
+  [role="navigation"],
+  [role="banner"],
+  .toast,
+  header:not(.keep-print),
+  footer:not(.keep-print),
+  .print\:hidden * {
+    display: none !important;
+  }
+
+  /* Card Styling */
+  .card,
+  [class*="card"] {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+    background: white !important;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: 24pt;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  h2 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  h4, h5, h6 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    page-break-after: avoid;
+  }
+
+  /* Module Content Specific Styles */
+  .module-content,
+  .prose {
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+  }
+
+  /* Sections - Keep together when possible */
+  section {
+    page-break-inside: avoid;
+    margin-bottom: 1.5em;
+  }
+
+  /* Paragraphs */
+  p {
+    margin: 0.75em 0;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    margin: 1em 0;
+    padding-left: 2em;
+    page-break-inside: avoid;
+  }
+
+  li {
+    margin: 0.5em 0;
+    page-break-inside: avoid;
+  }
+
+  /* Blockquotes (Quran/Hadith) */
+  blockquote {
+    border-left: 3px solid #00FF87;
+    padding-left: 1em;
+    margin: 1em 0;
+    page-break-inside: avoid;
+    font-style: italic;
+  }
+
+  cite {
+    font-size: 10pt;
+    color: #666;
+    font-style: italic;
+    display: block;
+    margin-top: 0.5em;
+  }
+
+  /* Arabic Text Support */
+  .arabic,
+  [dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+    font-size: 14pt;
+    margin: 0.5em 0;
+    page-break-inside: avoid;
+  }
+
+  /* Links */
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  /* External links - show URL */
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+    word-break: break-all;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    page-break-inside: avoid;
+    margin: 1em 0;
+  }
+
+  th,
+  td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+
+  /* Code Blocks */
+  pre,
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 10pt;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    page-break-inside: avoid;
+    overflow-wrap: break-word;
+  }
+
+  /* Strong and Emphasis */
+  strong,
+  b {
+    font-weight: bold;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  /* Page Break Controls */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  /* Print-Only Elements */
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:flex {
+    display: flex !important;
+  }
+
+  /* Avoid breaking these elements */
+  .no-break {
+    page-break-inside: avoid;
+  }
+
+  /* Printable worksheet visibility + tweaks */
+  .worksheet-print {
+    display: block !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .worksheet {
+    padding: 0;
+  }
+
+  .worksheet-title {
+    font-size: 20pt;
+  }
+
+  .worksheet-section {
+    margin-top: 1.25rem;
+  }
+
+  /* Checklist Print Styles */
+  .printable-checklist {
+    display: block !important;
+  }
+
+  .printable-checklist-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.75rem;
+  }
+
+  .printable-checklist-title {
+    font-size: 20pt;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+
+  .printable-checklist-date {
+    font-size: 10pt;
+    color: #666;
+  }
+
+  .printable-checklist-category {
+    margin-top: 1.5rem;
+    page-break-inside: avoid;
+  }
+
+  .printable-checklist-category-title {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.25rem;
+  }
+
+  .printable-checklist-item {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    page-break-inside: avoid;
+  }
+
+  .printable-checklist-item-completed::before {
+    content: "✓ ";
+    font-weight: bold;
+    color: #000;
+  }
+
+  .printable-checklist-item-incomplete::before {
+    content: "☐ ";
+    color: #000;
+  }
+
+  .printable-checklist-item-notes {
+    font-size: 9pt;
+    color: #666;
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+  }
+
+  .printable-checklist-item-discuss {
+    font-size: 9pt;
+    color: #0066cc;
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* ========================================
+   Brand Themes (Admin-selectable)
+   Each theme overrides brand/accent colors
+   ======================================== */
+
+/* Classic Green (default) - Bright Islamic green with gold/purple accents */
+.theme-classic {
+  --color-brand: #00FF87;
+  --color-brand-accent: #60EFFF;
+  --color-brand-soft: color-mix(in srgb, #00FF87 15%, transparent);
+  --gradient-brand: linear-gradient(90deg, #00FF87, #60EFFF);
+  --color-primary: #00FF87;
+  --color-islamic-gold: hsl(46 72% 68%);
+  --color-islamic-purple: hsl(288 50% 35%);
+  --color-success: #00FF87;
+  --color-ring: hsl(46 72% 68%);
+}
+
+/* Midnight Gold - Deep slate with striking gold highlights */
+.theme-midnight {
+  --color-brand: #1E293B;
+  --color-brand-accent: #FACC15;
+  --color-brand-soft: color-mix(in srgb, #FACC15 15%, transparent);
+  --gradient-brand: linear-gradient(90deg, #1E293B, #FACC15);
+  --color-primary: #FACC15;
+  --color-islamic-gold: #FACC15;
+  --color-islamic-purple: #4C1D95;
+  --color-success: #FACC15;
+  --color-ring: #FACC15;
+}
+
+/* Soft Neutral - Muted teal and warm amber for a calm experience */
+.theme-soft {
+  --color-brand: #14B8A6;
+  --color-brand-accent: #FBBF24;
+  --color-brand-soft: color-mix(in srgb, #14B8A6 15%, transparent);
+  --gradient-brand: linear-gradient(90deg, #14B8A6, #FBBF24);
+  --color-primary: #14B8A6;
+  --color-islamic-gold: #FBBF24;
+  --color-islamic-purple: #6D28D9;
+  --color-success: #14B8A6;
+  --color-ring: #FBBF24;
+}
+
+/* ========================================
+   5 Green Theme Variations
+   MUST be placed after base theme variables
+   Uses data attributes for better performance
+   ======================================== */
+
+/* Base transition for theme changes - respects reduced motion */
+:root {
+  --theme-transition-duration: 0.3s;
+  --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --theme-transition-duration: 0.01s;
+  }
+}
+
+/* Smooth transitions for theme properties */
+*,
+*::before,
+*::after {
+  transition: 
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Emerald Green - Vibrant, bright green */
+.green-emerald,
+[data-green-theme="emerald"],
+.dark.green-emerald,
+.dark[data-green-theme="emerald"] {
+  --color-brand: #10b981 !important;
+  --color-brand-accent: #34d399 !important;
+  --color-brand-soft: color-mix(in srgb, #10b981 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #10b981, #34d399) !important;
+  --color-primary: #10b981 !important;
+  --color-success: #10b981 !important;
+}
+
+/* Forest Green - Deep, rich green */
+.green-forest,
+[data-green-theme="forest"],
+.dark.green-forest,
+.dark[data-green-theme="forest"] {
+  --color-brand: #059669 !important;
+  --color-brand-accent: #10b981 !important;
+  --color-brand-soft: color-mix(in srgb, #059669 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #059669, #10b981) !important;
+  --color-primary: #059669 !important;
+  --color-success: #059669 !important;
+}
+
+/* Mint Green - Soft, light green */
+.green-mint,
+[data-green-theme="mint"],
+.dark.green-mint,
+.dark[data-green-theme="mint"] {
+  --color-brand: #00FF87 !important;
+  --color-brand-accent: #60EFFF !important;
+  --color-brand-soft: color-mix(in srgb, #00FF87 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #00FF87, #60EFFF) !important;
+  --color-primary: #00FF87 !important;
+  --color-success: #00FF87 !important;
+}
+
+/* Sage Green - Muted, earthy green */
+.green-sage,
+[data-green-theme="sage"],
+.dark.green-sage,
+.dark[data-green-theme="sage"] {
+  --color-brand: #6b9280 !important;
+  --color-brand-accent: #87a99a !important;
+  --color-brand-soft: color-mix(in srgb, #6b9280 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #6b9280, #87a99a) !important;
+  --color-primary: #6b9280 !important;
+  --color-success: #6b9280 !important;
+}
+
+/* Jade Green - Cool, blue-tinted green */
+.green-jade,
+[data-green-theme="jade"],
+.dark.green-jade,
+.dark[data-green-theme="jade"] {
+  --color-brand: #14b8a6 !important;
+  --color-brand-accent: #2dd4bf !important;
+  --color-brand-soft: color-mix(in srgb, #14b8a6 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #14b8a6, #2dd4bf) !important;
+  --color-primary: #14b8a6 !important;
+  --color-success: #14b8a6 !important;
+}
+
+/* Preview theme support - allows real-time preview in modal */
+[data-green-theme-preview="emerald"],
+.dark[data-green-theme-preview="emerald"] {
+  --color-brand: #10b981 !important;
+  --color-brand-accent: #34d399 !important;
+  --color-brand-soft: color-mix(in srgb, #10b981 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #10b981, #34d399) !important;
+  --color-primary: #10b981 !important;
+  --color-success: #10b981 !important;
+}
+
+[data-green-theme-preview="forest"],
+.dark[data-green-theme-preview="forest"] {
+  --color-brand: #059669 !important;
+  --color-brand-accent: #10b981 !important;
+  --color-brand-soft: color-mix(in srgb, #059669 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #059669, #10b981) !important;
+  --color-primary: #059669 !important;
+  --color-success: #059669 !important;
+}
+
+[data-green-theme-preview="mint"],
+.dark[data-green-theme-preview="mint"] {
+  --color-brand: #00FF87 !important;
+  --color-brand-accent: #60EFFF !important;
+  --color-brand-soft: color-mix(in srgb, #00FF87 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #00FF87, #60EFFF) !important;
+  --color-primary: #00FF87 !important;
+  --color-success: #00FF87 !important;
+}
+
+[data-green-theme-preview="sage"],
+.dark[data-green-theme-preview="sage"] {
+  --color-brand: #6b9280 !important;
+  --color-brand-accent: #87a99a !important;
+  --color-brand-soft: color-mix(in srgb, #6b9280 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #6b9280, #87a99a) !important;
+  --color-primary: #6b9280 !important;
+  --color-success: #6b9280 !important;
+}
+
+[data-green-theme-preview="jade"],
+.dark[data-green-theme-preview="jade"] {
+  --color-brand: #14b8a6 !important;
+  --color-brand-accent: #2dd4bf !important;
+  --color-brand-soft: color-mix(in srgb, #14b8a6 15%, transparent) !important;
+  --gradient-brand: linear-gradient(90deg, #14b8a6, #2dd4bf) !important;
+  --color-primary: #14b8a6 !important;
+  --color-success: #14b8a6 !important;
+}
+
+/* Scoped theme support for comparison cards */
+/* Allows individual containers to show their own theme */
+[data-green-theme="emerald"] {
+  --color-brand: #10b981 !important;
+  --color-brand-accent: #34d399 !important;
+  --color-primary: #10b981 !important;
+  --color-success: #10b981 !important;
+}
+
+[data-green-theme="forest"] {
+  --color-brand: #059669 !important;
+  --color-brand-accent: #10b981 !important;
+  --color-primary: #059669 !important;
+  --color-success: #059669 !important;
+}
+
+[data-green-theme="mint"] {
+  --color-brand: #00FF87 !important;
+  --color-brand-accent: #60EFFF !important;
+  --color-primary: #00FF87 !important;
+  --color-success: #00FF87 !important;
+}
+
+[data-green-theme="sage"] {
+  --color-brand: #6b9280 !important;
+  --color-brand-accent: #87a99a !important;
+  --color-primary: #6b9280 !important;
+  --color-success: #6b9280 !important;
+}
+
+[data-green-theme="jade"] {
+  --color-brand: #14b8a6 !important;
+  --color-brand-accent: #2dd4bf !important;
+  --color-primary: #14b8a6 !important;
+  --color-success: #14b8a6 !important;
+}
+
+/* React Day Picker Custom Styles - Mobile-First, Theme-Aware */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: var(--color-primary);
+  --rdp-background-color: var(--color-card);
+  --rdp-accent-color-dark: var(--color-primary);
+  --rdp-background-color-dark: var(--color-card);
+  --rdp-outline: 2px solid var(--color-primary);
+  --rdp-outline-selected: 2px solid var(--color-primary);
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .rdp {
+    --rdp-cell-size: 44px;
+    font-size: 1rem;
+  }
+}
+
+.rdp-months {
+  display: flex;
+}
+
+.rdp-month {
+  margin: 0;
+}
+
+.rdp-table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+}
+
+.rdp-with_weeknumber .rdp-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rdp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  text-align: left;
+}
+
+.rdp-multiple_months .rdp-caption {
+  position: relative;
+  display: block;
+  text-align: center;
+}
+
+.rdp-caption_label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 0.25rem;
+  white-space: nowrap;
+  color: var(--color-foreground);
+  border: 0;
+  border: 2px solid transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .rdp-caption_label {
+    font-size: 1rem;
+  }
+}
+
+.rdp-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+
+.rdp-multiple_months .rdp-caption_start .rdp-nav,
+.rdp-multiple_months .rdp-caption_end .rdp-nav {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.rdp-nav_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  color: var(--color-muted-foreground);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease-in-out;
+}
+
+.rdp-nav_button:hover {
+  background-color: var(--color-accent);
+  color: var(--color-foreground);
+}
+
+.rdp-nav_button:focus-visible:not([disabled]) {
+  color: var(--color-foreground);
+  background-color: var(--color-accent);
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.rdp-nav_button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rdp-nav_icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rdp-nav_button_next {
+  margin-left: auto;
+}
+
+.rdp-head_cell {
+  vertical-align: middle;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  height: var(--rdp-cell-size);
+  padding: 0;
+  color: var(--color-muted-foreground);
+}
+
+@media (min-width: 640px) {
+  .rdp-head_cell {
+    font-size: 0.875rem;
+  }
+}
+
+.rdp-tbody {
+  border: 0;
+}
+
+.rdp-tfoot {
+  margin: 0.5rem;
+}
+
+.rdp-cell {
+  width: var(--rdp-cell-size);
+  height: 100%;
+  position: relative;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .rdp-cell {
+    font-size: 1rem;
+  }
+}
+
+.rdp-button {
+  border: 2px solid transparent;
+}
+
+.rdp-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rdp-day {
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  position: relative;
+  display: flex;
+  overflow: visible;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--rdp-cell-size);
+  max-width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  margin: 0;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  color: var(--color-foreground);
+  background-color: transparent;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  .rdp-day {
+    font-size: 1rem;
+  }
+}
+
+.rdp-day:hover:not([disabled]):not(.rdp-day_selected):not(.rdp-day_outside) {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.rdp-day:active:not([disabled]) {
+  transform: scale(0.95);
+}
+
+.rdp-day:focus-visible:not([disabled]) {
+  color: var(--color-foreground);
+  background-color: var(--color-accent);
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  color: var(--color-primary-foreground);
+  opacity: 1;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.rdp-day_selected:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.rdp-day_today:not(.rdp-day_outside) {
+  font-weight: 600;
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.rdp-day_today.rdp-day_selected {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.rdp-day_outside {
+  color: var(--color-muted-foreground);
+  opacity: 0.5;
+}
+
+.rdp-day_disabled {
+  color: var(--color-muted-foreground);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rdp-day_hidden {
+  visibility: hidden;
+}
+
+/* Dark mode support */
+.dark .rdp {
+  --rdp-accent-color: var(--color-primary);
+  --rdp-background-color: var(--color-card);
+}
+
+.dark .rdp-day_today:not(.rdp-day_outside) {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.dark .rdp-day_selected,
+.dark .rdp-day_selected:focus-visible,
+.dark .rdp-day_selected:hover {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
