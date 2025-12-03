@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { useFavoriteResources, type FavoriteResource } from '../../hooks/useFavoriteResources'
-import { Skeleton } from '../ui/Skeleton'
+import { Skeleton } from '../ui'
 import { cn } from '../../lib/utils'
 
 const categoryConfig: Record<string, { icon: typeof BookOpen; color: string; bgColor: string }> = {
