@@ -22,6 +22,11 @@ interface ThemeToggleProps {
    */
   showLabel?: boolean
   /**
+   * Icon color: 'white', 'black', or 'default' (uses theme foreground)
+   * @default 'default'
+   */
+  iconColor?: 'white' | 'black' | 'default'
+  /**
    * Additional className
    */
   className?: string
@@ -41,11 +46,22 @@ export const ThemeToggle = memo(function ThemeToggle({
   variant = 'button',
   size = 'md',
   showLabel = false,
+  iconColor = 'default',
   className,
 }: ThemeToggleProps) {
   const { theme, toggleTheme } = useThemeMode()
 
   const isDark = theme === 'dark'
+
+  // Determine icon color based on prop
+  const getIconColor = () => {
+    if (iconColor === 'white') return 'white'
+    if (iconColor === 'black') return 'black'
+    return 'currentColor' // default - uses theme foreground
+  }
+
+  const iconColorValue = getIconColor()
+  const iconColorClass = iconColor === 'default' ? 'text-foreground' : ''
 
   // Size configurations
   const sizeConfig = {
@@ -98,9 +114,13 @@ export const ThemeToggle = memo(function ThemeToggle({
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="flex items-center justify-center"
+                className={cn('flex items-center justify-center', iconColorClass)}
               >
-                <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
+                <Moon 
+                  className={cn(config.icon, iconColorClass || 'text-foreground')} 
+                  style={iconColor !== 'default' ? { color: iconColorValue } : undefined} 
+                  aria-hidden="true" 
+                />
               </motion.div>
             ) : (
               <motion.div
@@ -109,10 +129,10 @@ export const ThemeToggle = memo(function ThemeToggle({
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ opacity: 0, scale: 0.5, rotate: -90 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="flex items-center justify-center text-foreground"
+                className={cn('flex items-center justify-center', iconColorClass)}
               >
-                <span style={{ color: 'inherit', display: 'inline-flex' }}>
-                  <FaCloud size={config.iconSize} color="currentColor" aria-hidden="true" />
+                <span style={{ color: iconColorValue, display: 'inline-flex' }}>
+                  <FaCloud size={config.iconSize} color={iconColorValue} aria-hidden="true" />
                 </span>
               </motion.div>
             )}
@@ -147,10 +167,14 @@ export const ThemeToggle = memo(function ThemeToggle({
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="flex items-center justify-center"
+              className={cn('flex items-center justify-center', iconColorClass)}
               style={{ width: config.iconSize, height: config.iconSize }}
             >
-              <Moon className={cn(config.icon, 'text-foreground')} aria-hidden="true" />
+              <Moon 
+                className={cn(config.icon, iconColorClass || 'text-foreground')} 
+                style={iconColor !== 'default' ? { color: iconColorValue } : undefined} 
+                aria-hidden="true" 
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -159,11 +183,11 @@ export const ThemeToggle = memo(function ThemeToggle({
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 0.5, rotate: -90 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="flex items-center justify-center text-foreground"
+              className={cn('flex items-center justify-center', iconColorClass)}
               style={{ width: config.iconSize, height: config.iconSize }}
             >
-              <span style={{ color: 'inherit', display: 'inline-flex' }}>
-                <FaCloud size={config.iconSize} color="currentColor" aria-hidden="true" />
+              <span style={{ color: iconColorValue, display: 'inline-flex' }}>
+                <FaCloud size={config.iconSize} color={iconColorValue} aria-hidden="true" />
               </span>
             </motion.div>
           )}

@@ -250,7 +250,7 @@ export function Home() {
                 
                 {/* Theme Toggle - pulled close to logo using negative margin */}
                 <div className="flex items-center -ml-1 sm:-ml-1.5">
-                  <ThemeToggle variant="icon" size="sm" />
+                  <ThemeToggle variant="icon" size="sm" iconColor="white" />
                 </div>
               </div>
 
