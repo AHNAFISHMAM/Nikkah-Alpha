@@ -11,6 +11,10 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  resolve: {
+    // Ensure proper resolution of react-icons subpath exports
+    dedupe: ['react', 'react-dom'],
+  },
   server: {
     port: 5173, // ONLY ONE PORT - always reuse this
     strictPort: true, // Must use this port only (we kill it first)
@@ -49,6 +53,7 @@ export default defineConfig({
       '@tanstack/react-query',
       'framer-motion',
       'lucide-react',
+      'react-icons',
     ],
     force: false, // Don't force re-optimization on every start
   },
