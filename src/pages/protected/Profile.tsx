@@ -138,7 +138,7 @@ export function Profile() {
         },
       }
     )
-  }
+  }, [changeTheme, getThemeMeta])
 
   // Keyboard shortcuts for theme switching (Ctrl/Cmd + 1-5)
   useEffect(() => {
