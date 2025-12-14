@@ -89,6 +89,7 @@ export function Financial() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="mb-2 sm:mb-4"
+            style={{ willChange: 'transform, opacity' }}
           >
             <div className="flex items-center gap-2 text-primary text-xs sm:text-sm font-medium mb-3">
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -141,6 +142,7 @@ export function Financial() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               className="mt-4 sm:mt-6"
+              style={{ willChange: 'transform, opacity' }}
             >
               {activeTab === 'budget' && <div id="budget" className="scroll-mt-20 sm:scroll-mt-24"><BudgetCalculator /></div>}
               {activeTab === 'mahr' && <div id="mahr" className="scroll-mt-20 sm:scroll-mt-24"><MahrTracker /></div>}
@@ -319,7 +321,7 @@ function CostSplitCalculator() {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-2xl border border-blue-100 dark:border-blue-800">
+        <div className="p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-purple-50 dark:bg-card dark:border dark:border-border/50 rounded-2xl border border-blue-100">
           <h3 className="font-semibold text-foreground text-base sm:text-lg mb-5 sm:mb-6">Contribution Summary</h3>
 
           <div className="space-y-5 sm:space-y-6">

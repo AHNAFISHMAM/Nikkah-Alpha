@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Progress } from '../../components/ui/Progress'
 import { Skeleton } from '../../components/common/Skeleton'
 import { BookOpen, CheckCircle } from 'lucide-react'
+import { logWarning } from '../../lib/logger'
 
 interface Module {
   id: string

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useMemo, useCallback, u
 import { supabase } from '../lib/supabase'
 import { applyThemeClass, getStoredTheme } from '../lib/applyThemeClass'
 import type { ThemeKey } from '../lib/themePresets'
+import { logError } from '../lib/logger'
 
 type Theme = 'light' | 'dark'
 
@@ -167,9 +168,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           .eq('key', 'theme')
           .maybeSingle()
 
-        // @ts-expect-error - Supabase type inference issue with app_settings
         if (data && data.value && typeof data.value === 'object' && 'themeKey' in data.value) {
-          // @ts-expect-error - Supabase type inference issue
           const dbTheme = (data.value as { themeKey: ThemeKey }).themeKey
           if (dbTheme !== storedTheme) {
             setBrandTheme(dbTheme)
@@ -212,7 +211,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const setGreenTheme = useCallback((newGreenTheme: GreenTheme) => {
     if (!GREEN_THEMES.includes(newGreenTheme)) {
-      console.error(`Invalid green theme: ${newGreenTheme}. Valid themes: ${GREEN_THEMES.join(', ')}`)
+      logError(`Invalid green theme: ${newGreenTheme}. Valid themes: ${GREEN_THEMES.join(', ')}`, undefined, 'ThemeContext')
       return
     }
     setGreenThemeState(newGreenTheme)

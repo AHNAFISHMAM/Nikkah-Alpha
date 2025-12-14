@@ -1,3 +1,5 @@
+import { logWarning } from '../lib/logger'
+
 /**
  * Mutation Deduplication Utility
  * Prevents duplicate mutations within a time window
@@ -35,7 +37,7 @@ class MutationDeduplicator {
     if (existing) {
       const timeSinceLastMutation = now - existing.timestamp
       if (timeSinceLastMutation < windowMs) {
-        console.warn(`[MutationDeduplication] Blocked duplicate ${operationType} for ${key}`)
+        logWarning(`Blocked duplicate ${operationType} for ${key}`, 'MutationDeduplication')
         return false
       }
     }

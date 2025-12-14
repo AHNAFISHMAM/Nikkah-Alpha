@@ -32,16 +32,17 @@ import { Progress } from '../../components/ui/Progress'
 import { cn } from '../../lib/utils'
 import { NotesEditor } from '../../components/discussions/NotesEditor'
 import { PartnerStatusBadge } from '../../components/discussions/PartnerStatusBadge'
+import { SkeletonCard, SkeletonList } from '../../components/common/Skeleton'
 
 // Extract constants to prevent recreation
 const CATEGORY_CONFIG: Record<string, { color: string; bgColor: string; icon: typeof Heart }> = {
-  values: { color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20', icon: Heart },
-  family: { color: 'text-secondary-foreground', bgColor: 'bg-secondary/10 dark:bg-secondary/20', icon: Users },
-  lifestyle: { color: 'text-accent-foreground', bgColor: 'bg-accent/10 dark:bg-accent/20', icon: Sparkles },
-  finances: { color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30', icon: MessageCircle },
-  faith: { color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30', icon: Heart },
-  communication: { color: 'text-pink-600 dark:text-pink-400', bgColor: 'bg-pink-100 dark:bg-pink-900/30', icon: MessageCircle },
-  goals: { color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30', icon: Sparkles },
+  values: { color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-accent/30', icon: Heart },
+  family: { color: 'text-secondary-foreground', bgColor: 'bg-secondary/10 dark:bg-accent/30', icon: Users },
+  lifestyle: { color: 'text-accent-foreground', bgColor: 'bg-accent/10 dark:bg-accent/30', icon: Sparkles },
+  finances: { color: 'text-blue-600 dark:text-blue-300', bgColor: 'bg-blue-100 dark:bg-blue-900/20', icon: MessageCircle },
+  faith: { color: 'text-purple-600 dark:text-purple-300', bgColor: 'bg-purple-100 dark:bg-purple-900/20', icon: Heart },
+  communication: { color: 'text-pink-600 dark:text-pink-300', bgColor: 'bg-pink-100 dark:bg-pink-900/20', icon: MessageCircle },
+  goals: { color: 'text-amber-600 dark:text-amber-300', bgColor: 'bg-amber-100 dark:bg-amber-900/20', icon: Sparkles },
 }
 
 const CONTAINER_VARIANTS = {
@@ -321,7 +322,7 @@ export function Discussions() {
         noIndex
       />
 
-      <div className="min-h-screen w-full bg-gradient-to-br from-primary/5 via-background via-60% to-islamic-purple/5">
+      <div className="min-h-screen w-full bg-gradient-to-br from-primary/5 via-background via-60% to-islamic-purple/5 dark:bg-background">
         <div className="w-full p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6 sm:space-y-8">
           {/* Main Discussions Section */}
           <section id="discussions" className="scroll-mt-20 sm:scroll-mt-24">
@@ -331,6 +332,7 @@ export function Discussions() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="mb-6 sm:mb-8"
+              style={{ willChange: 'transform, opacity' }}
             >
               <div className="flex items-center gap-2 text-primary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                 <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -340,7 +342,7 @@ export function Discussions() {
                 Discussion Prompts
               </h1>
               <div className="flex items-center gap-2 sm:gap-3">
-                <p className="text-muted-foreground text-sm sm:text-base">
+                <p className="text-muted-foreground dark:text-muted-foreground/90 text-sm sm:text-base">
                   Important conversations to have with your partner
                 </p>
                 <div
@@ -361,21 +363,22 @@ export function Discussions() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                style={{ willChange: 'transform, opacity' }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="mb-6 sm:mb-8"
               >
                 <Card className="overflow-hidden" padding="none">
-                  <div className="p-4 sm:p-6 bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl">
+                  <div className="p-4 sm:p-6 bg-primary/5 dark:bg-card dark:border dark:border-border/50 rounded-xl">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 dark:bg-accent/50 flex items-center justify-center flex-shrink-0">
+                          <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary dark:text-primary/90" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm sm:text-base font-medium text-foreground mb-1">
+                          <p className="text-sm sm:text-base font-medium text-foreground dark:text-foreground/95 mb-1">
                             Connect with your partner
                           </p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground dark:text-muted-foreground/85">
                             Share answers and collaborate together on these discussions
                           </p>
                         </div>
@@ -399,12 +402,9 @@ export function Discussions() {
           {/* Progress Overview */}
           <section>
             {isLoading && displayPrompts.length === 0 && user ? (
-              <Card>
-                <CardContent className="py-16 sm:py-20 text-center">
-                  <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-islamic-gold mx-auto mb-4 sm:mb-5" />
-                  <p className="text-muted-foreground text-sm sm:text-base">Loading discussions...</p>
-                </CardContent>
-              </Card>
+              <div className="space-y-4 sm:space-y-6">
+                <SkeletonList count={5} />
+              </div>
             ) : !user ? (
               <Card>
                 <CardContent className="py-16 sm:py-20 text-center">
@@ -424,18 +424,18 @@ export function Discussions() {
                 className="mb-6 sm:mb-8"
               >
                 <Card className="overflow-hidden" padding="none">
-                  <div className="bg-gradient-to-r from-primary/10 via-islamic-gold/5 to-islamic-purple/10 dark:from-primary/20 dark:via-islamic-gold/10 dark:to-islamic-purple/20 p-6 sm:p-8">
+                  <div className="bg-gradient-to-r from-primary/10 via-islamic-gold/5 to-islamic-purple/10 dark:bg-card dark:border dark:border-border/50 p-6 sm:p-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
                       <div>
-                        <h2 className="font-semibold text-foreground text-lg sm:text-xl mb-1">
+                        <h2 className="font-semibold text-foreground dark:text-foreground/95 text-lg sm:text-xl mb-1">
                           Discussions Completed
                         </h2>
-                        <p className="text-muted-foreground text-sm sm:text-base">
+                        <p className="text-muted-foreground dark:text-muted-foreground/85 text-sm sm:text-base">
                           {discussedPrompts} of {totalPrompts} conversations
                         </p>
                       </div>
                       {isAllDiscussed && (
-                        <div className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 rounded-full min-h-[36px] sm:min-h-[40px]">
+                        <div className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full min-h-[36px] sm:min-h-[40px]">
                           <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                           <span className="font-medium text-sm sm:text-base">All Done!</span>
                         </div>
@@ -477,15 +477,15 @@ export function Discussions() {
                     {/* Category Header */}
                     <div className="flex items-center justify-between mb-4 sm:mb-5">
                       <div className="flex items-center gap-3">
-                        <h2 className="text-base sm:text-lg font-semibold text-foreground capitalize">
+                        <h2 className="text-base sm:text-lg font-semibold text-foreground dark:text-foreground/95 capitalize">
                           {category}
                         </h2>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground dark:text-muted-foreground/85">
                           {categoryDiscussed} / {categoryPrompts.length} discussed
                         </span>
                       </div>
                       {categoryDiscussed === categoryPrompts.length && categoryPrompts.length > 0 && (
-                        <span className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full">
+                        <span className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full">
                           Complete
                         </span>
                       )}
@@ -514,20 +514,20 @@ export function Discussions() {
                           >
                             <Card
                               className={cn(
-                                'overflow-hidden transition-all duration-200 cursor-pointer relative border-2 hover:border-primary/20 hover:shadow-sm',
-                                isDiscussed && 'bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+                                'overflow-hidden transition-all duration-200 cursor-pointer relative border-2 hover:border-primary/20 dark:hover:border-primary/30 hover:shadow-sm',
+                                isDiscussed && 'bg-green-50/50 dark:bg-green-950/30 border-green-200 dark:border-green-700/50'
                               )}
                               padding="none"
                             >
                               {/* Stripe-style gradient overlay on hover */}
                               <motion.div
-                                className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 z-0 pointer-events-none"
+                                className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 dark:from-primary/10 dark:via-transparent dark:to-primary/10 opacity-0 z-0 pointer-events-none"
                                 whileHover={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}
                               />
                               {/* Subtle shine effect on hover */}
                               <motion.div
-                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full z-0 pointer-events-none"
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent -translate-x-full z-0 pointer-events-none"
                                 whileHover={{ x: "200%" }}
                                 transition={{ duration: 0.6, ease: "easeInOut" }}
                               />
@@ -542,19 +542,19 @@ export function Discussions() {
                                 <div className="flex-1 min-w-0">
                                   <h3 className={cn(
                                     'font-semibold text-base sm:text-lg mb-1 transition-colors',
-                                    isDiscussed ? 'text-muted-foreground line-through' : 'text-foreground group-hover:text-primary'
+                                    isDiscussed ? 'text-muted-foreground dark:text-muted-foreground/70 line-through' : 'text-foreground dark:text-foreground/95 group-hover:text-primary'
                                   )}>
                                     {prompt.title}
                                   </h3>
                                   {prompt.description && !isExpanded && (
-                                    <p className="text-sm sm:text-base text-muted-foreground line-clamp-1">
+                                    <p className="text-sm sm:text-base text-muted-foreground dark:text-muted-foreground/85 line-clamp-1">
                                       {prompt.description}
                                     </p>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                                   {isDiscussed && (
-                                    <span className="hidden sm:inline-flex text-xs sm:text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1.5 rounded-full">
+                                    <span className="hidden sm:inline-flex text-xs sm:text-sm font-medium text-green-600 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-3 py-1.5 rounded-full">
                                       Discussed
                                     </span>
                                   )}
@@ -582,7 +582,7 @@ export function Discussions() {
                                 >
                                   <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0 border-t border-border">
                                     {prompt.description && (
-                                      <p className="text-muted-foreground mt-5 sm:mt-6 mb-5 sm:mb-6 leading-relaxed text-sm sm:text-base">
+                                      <p className="text-muted-foreground dark:text-muted-foreground/85 mt-5 sm:mt-6 mb-5 sm:mb-6 leading-relaxed text-sm sm:text-base">
                                         {prompt.description}
                                       </p>
                                     )}

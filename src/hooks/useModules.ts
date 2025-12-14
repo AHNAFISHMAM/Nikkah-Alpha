@@ -78,9 +78,8 @@ export function useModulesWithProgress() {
       if (!supabase) {
         throw new Error('Supabase is not configured')
       }
-      // @ts-ignore - Supabase types may need regeneration
       const { data, error } = await supabase
-        .from('lessons')
+        .from('lessons' as any)
         .select('id, module_id')
         .order('sort_order')
 
@@ -97,9 +96,8 @@ export function useModulesWithProgress() {
       if (!supabase || !user) {
         return []
       }
-      // @ts-ignore - Supabase types may need regeneration
       const { data, error } = await supabase
-        .from('user_module_progress')
+        .from('user_module_progress' as any)
         .select('module_id, lesson_id, is_completed')
         .eq('user_id', user.id)
 
@@ -151,9 +149,8 @@ export function useModuleNotes(moduleId: string | undefined) {
       if (!supabase || !user || !moduleId) {
         return null
       }
-      // @ts-ignore - Supabase types may need regeneration
       const { data, error } = await supabase
-        .from('module_notes')
+        .from('module_notes' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('module_id', moduleId)

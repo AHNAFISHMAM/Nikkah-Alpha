@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { useTheme, GREEN_THEME_META, type GreenTheme } from '../contexts/ThemeContext'
 import { useProfile, useUpdateProfile } from './useProfile'
 import { useDebounce } from './useDebounce'
+import { logError, logWarning } from '../lib/logger'
 
 /**
  * Custom hook for managing green theme with database synchronization
@@ -47,7 +48,7 @@ export function useGreenTheme() {
           updateProfile
             .mutateAsync({ green_theme: defaultTheme })
             .catch((error) => {
-              console.error('Failed to set default green theme:', error)
+              logError('Failed to set default green theme', error, 'useGreenTheme')
             })
             .finally(() => {
               isSyncingRef.current = false
@@ -119,7 +120,7 @@ export function useGreenTheme() {
         userInitiatedChangeRef.current = false
       })
       .catch((error) => {
-        console.error('Failed to sync theme to database:', error)
+        logError('Failed to sync theme to database', error, 'useGreenTheme')
         
         // Enhanced error tracking
         const errorInfo = {
@@ -139,7 +140,7 @@ export function useGreenTheme() {
           localStorage.setItem('theme-errors', JSON.stringify(trimmedLog))
         } catch (storageError) {
           // Silently fail if localStorage is full or unavailable
-          console.warn('Could not save error log to localStorage:', storageError)
+          logWarning('Could not save error log to localStorage', 'useGreenTheme')
         }
         
         // Theme is still updated in localStorage, so user preference is preserved
@@ -157,7 +158,7 @@ export function useGreenTheme() {
     (newTheme: GreenTheme) => {
       // Validate theme
       if (!Object.keys(GREEN_THEME_META).includes(newTheme)) {
-        console.error(`Invalid green theme: ${newTheme}`)
+        logError(`Invalid green theme: ${newTheme}`, undefined, 'useGreenTheme')
         return
       }
 

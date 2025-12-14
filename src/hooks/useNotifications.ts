@@ -26,12 +26,9 @@ export function useNotifications() {
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        console.log('[useNotifications] No user ID, returning empty array')
         return []
       }
       if (!supabase) throw new Error('Supabase is not configured')
-
-      console.log('[useNotifications] Fetching notifications for user:', user.id)
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -40,7 +37,6 @@ export function useNotifications() {
         .limit(50)
 
       if (error) {
-        console.error('[useNotifications] Error fetching notifications:', error)
         logError(error, 'useNotifications')
         throw error
       }
@@ -55,9 +51,6 @@ export function useNotifications() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
 
-      const unreadCount = sorted.filter(n => !n.is_read).length
-      console.log('[useNotifications] Fetched notifications:', sorted.length, 'total,', unreadCount, 'unread')
-      
       return sorted as Notification[]
     },
     enabled: !!user?.id,
@@ -84,12 +77,10 @@ export function useUnreadNotificationCount() {
         .eq('is_read', false)
 
       if (error) {
-        console.error('[useUnreadNotificationCount] Error fetching unread count:', error)
         logError(error, 'useUnreadNotificationCount')
         return 0
       }
 
-      console.log('[useUnreadNotificationCount] Unread count:', count || 0)
       return count || 0
     },
     enabled: !!user?.id,
@@ -315,7 +306,7 @@ export function useRealtimeNotifications() {
           if (!isMountedRef.current) return
           
           // Log real-time update for debugging
-          console.log('[Realtime] Notification change detected:', payload.eventType, payload.new?.type || payload.old?.type)
+          // Notification change detected
           
           // Invalidate queries when notification changes
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] })
@@ -326,9 +317,9 @@ export function useRealtimeNotifications() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Notifications channel subscribed for user ${user.id}`)
+          // Channel subscribed successfully
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.warn(`[Realtime] Notifications channel status: ${status} for user ${user.id}`)
+          // Channel error or timeout - will attempt to resubscribe
           // Attempt to resubscribe after a delay if not explicitly closed
           if (status !== 'CLOSED' && isMountedRef.current) {
             setTimeout(() => {

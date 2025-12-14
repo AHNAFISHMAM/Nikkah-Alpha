@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
 import { isClient } from './client-only'
+import { logWarning } from './logger'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -75,12 +76,12 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
             if (error.name === 'AbortError') {
               // Timeout errors - only log if not a background token refresh
               if (!isTokenRefresh) {
-                console.warn('Request timeout:', url)
+                logWarning(`Request timeout: ${url}`, 'supabase')
               }
             } else if (isNetworkError) {
               // Network/DNS errors - only log if not a background token refresh
               if (!isTokenRefresh) {
-                console.warn('Network error - check your internet connection')
+                logWarning('Network error - check your internet connection', 'supabase')
               }
               // For token refresh failures, return a rejected promise that Supabase can handle gracefully
               if (isTokenRefresh) {

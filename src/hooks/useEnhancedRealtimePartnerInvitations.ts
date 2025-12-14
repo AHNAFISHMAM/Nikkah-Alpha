@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logError, logWarning, logDebug } from '../lib/logger'
 
 /**
  * Enhanced real-time hook for partner invitations with:
@@ -86,7 +87,7 @@ export function useEnhancedRealtimePartnerInvitations() {
       if (isMountedRef.current && user?.id && supabase) {
         // Re-initialize subscription by triggering useEffect
         // This will be handled by the dependency array
-        console.log(`[Realtime] Reconnection attempt ${reconnectAttemptsRef.current} for partner invitations`)
+        logDebug(`[Realtime] Reconnection attempt ${reconnectAttemptsRef.current} for partner invitations`, undefined, 'useEnhancedRealtimePartnerInvitations')
       }
     }, delay)
   }, [user?.id])
@@ -111,14 +112,14 @@ export function useEnhancedRealtimePartnerInvitations() {
             supabase.removeChannel(channelRef.current)
             console.log('[Realtime] Paused partner invitations subscription (app in background)')
           } catch (error) {
-            console.warn('[Realtime] Error pausing subscription:', error)
+            logWarning('[Realtime] Error pausing subscription', 'useEnhancedRealtimePartnerInvitations')
           }
           channelRef.current = null
         }
       } else {
         // Resume subscriptions when app comes to foreground
         // The main useEffect will re-initialize if needed
-        console.log('[Realtime] App in foreground, subscriptions will resume')
+        logDebug('[Realtime] App in foreground, subscriptions will resume', undefined, 'useEnhancedRealtimePartnerInvitations')
       }
     }
 
@@ -179,11 +180,7 @@ export function useEnhancedRealtimePartnerInvitations() {
             invitation &&
             (invitation.inviter_id === user.id || invitation.invitee_email === user.email)
           ) {
-            console.log('[Realtime] Partner invitation change detected:', payload.eventType, {
-              id: invitation.id,
-              status: invitation.status,
-              version: invitation.version,
-            })
+            logDebug('[Realtime] Partner invitation change detected', { eventType: payload.eventType, id: invitation.id, status: invitation.status, version: invitation.version }, 'useEnhancedRealtimePartnerInvitations')
             debouncedInvalidate(payload)
           }
         }
@@ -195,7 +192,7 @@ export function useEnhancedRealtimePartnerInvitations() {
           console.log(`[Realtime] Partner invitations channel subscribed for user ${user.id}`)
           reconnectAttemptsRef.current = 0 // Reset on successful subscription
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.warn(`[Realtime] Partner invitations channel status: ${status} for user ${user.id}`)
+          logWarning(`[Realtime] Partner invitations channel status: ${status} for user ${user.id}`, 'useEnhancedRealtimePartnerInvitations')
           // Attempt reconnection
           if (status !== 'CLOSED' || !document.hidden) {
             reconnect()

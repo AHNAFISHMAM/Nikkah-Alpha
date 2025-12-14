@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../../components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card'
+import { logError, logDebug } from '../../lib/logger'
 
 export function ConnectionTest() {
   const [status, setStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
@@ -52,7 +53,7 @@ export function ConnectionTest() {
           code: 'TIMEOUT',
         }
       }
-      console.log('Test 2: Connection', tests.connection)
+      logDebug('Test 2: Connection', tests.connection, 'ConnectionTest')
 
       // Test 3: Test auth (always works if URL is correct)
       try {
@@ -77,7 +78,7 @@ export function ConnectionTest() {
           error: err.message || 'Auth timeout',
         }
       }
-      console.log('Test 3: Auth', tests.auth)
+      logDebug('Test 3: Auth', tests.auth, 'ConnectionTest')
 
       // Test 4: Test database - check if tables exist (with timeout handling)
       if (!supabase) {
@@ -118,12 +119,12 @@ export function ConnectionTest() {
         },
       }
       }
-      console.log('Test 4: Database Tables', tests.database)
+      logDebug('Test 4: Database Tables', tests.database, 'ConnectionTest')
 
       setResults(tests)
       setStatus('success')
     } catch (error) {
-      console.error('Connection test failed:', error)
+      logError('Connection test failed', error, 'ConnectionTest')
       setResults({ ...tests, criticalError: error })
       setStatus('error')
     }

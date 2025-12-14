@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for user's own discussion answers
@@ -11,21 +13,23 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimeOwnDiscussionAnswers() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['discussions', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['partner-discussion-answer'] })
-      queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['discussions', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['partner-discussion-answer'] })
+        queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -59,7 +63,7 @@ export function useRealtimeOwnDiscussionAnswers() {
         },
         (payload) => {
           if (!isMountedRef.current) return
-          console.log('[Realtime] Own discussion answer change detected:', payload.eventType)
+          logDebug('[Realtime] Own discussion answer change detected', payload.eventType, 'useRealtimeOwnDiscussionAnswers')
           debouncedInvalidate()
         }
       )
@@ -67,9 +71,9 @@ export function useRealtimeOwnDiscussionAnswers() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Own discussions channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Own discussions channel subscribed for user ${user.id}`, undefined, 'useRealtimeOwnDiscussionAnswers')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Own discussions channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Own discussions channel status: ${status} for user ${user.id}`, undefined, 'useRealtimeOwnDiscussionAnswers')
         }
       })
 
@@ -89,6 +93,6 @@ export function useRealtimeOwnDiscussionAnswers() {
         channelRef.current = null
       }
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 }
 

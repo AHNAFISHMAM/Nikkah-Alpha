@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { logWarning } from '../lib/logger'
 
 /**
  * Hook to automatically scroll to a section when URL hash is present
@@ -7,7 +8,8 @@ import { useLocation } from 'react-router-dom'
  * This hook:
  * - Detects hash anchors in the URL (e.g., #partner-connection)
  * - Scrolls to the corresponding element with matching ID
- * - Works with scrollable containers (dashboard layout) and window scroll
+ * - Works with scrollable containers (dashboard layout) and html element scroll (public pages)
+ * - Best Practice: Uses document.documentElement for public pages since html is the scroll container
  * - Removes hash from URL after scrolling for clean URLs
  * - Handles mobile headers and provides proper offset
  * 
@@ -63,11 +65,13 @@ export function useScrollToSection(options?: {
           behavior: 'smooth',
         })
       } else {
-        // Fallback to window scroll (for public pages or if container not found)
-        const elementTop = element.getBoundingClientRect().top + window.scrollY - offset
+        // Fix: Use html element scroll for public pages (html is the scroll container)
+        const htmlElement = document.documentElement
+        const elementTop = element.getBoundingClientRect().top + htmlElement.scrollTop - offset
 
-        window.scrollTo({
+        htmlElement.scrollTo({
           top: Math.max(0, elementTop),
+          left: 0,
           behavior: 'smooth',
         })
       }

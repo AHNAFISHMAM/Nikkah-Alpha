@@ -37,7 +37,7 @@ export const PendingTasksCard = memo(function PendingTasksCard({ tasks, isLoadin
       transition={CARD_ANIMATION.transition}
     >
       <Card padding="none" className="overflow-hidden">
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-600/10 dark:from-amber-500/20 dark:via-amber-400/10 dark:to-amber-600/20 px-6 py-5 sm:px-8 sm:py-6 border-b border-border">
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-600/10 dark:bg-card dark:border-b dark:border-border/50 px-6 py-5 sm:px-8 sm:py-6 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">

@@ -1,14 +1,33 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
-import { Calendar, X } from "lucide-react"
+import { Calendar, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import ReactDatePicker from "react-datepicker"
-import { format, isValid, parseISO, startOfDay } from "date-fns"
+import {
+  format,
+  isValid,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addMonths,
+  subMonths,
+  isSameMonth,
+  isSameDay,
+  isBefore,
+  isAfter,
+  eachDayOfInterval,
+  getYear,
+  getMonth,
+  setMonth,
+  setYear,
+} from "date-fns"
 import { cn } from "../../lib/utils"
-import { MobileCalendar } from "./MobileCalendar"
+import { CustomDropdown } from "./CustomDropdown"
 import { useViewport } from "../../hooks/useViewport"
-import "react-datepicker/dist/react-datepicker.css"
-import "../../styles/datepicker-custom.css"
+import { Popover } from "./Popover"
+import { lockBodyScroll, unlockBodyScroll } from "../../utils/scrollLock"
 
 export interface DatePickerProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onChange"> {
@@ -21,6 +40,13 @@ export interface DatePickerProps
   min?: string
   max?: string
 }
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+] as const
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
 
 // Helper function to parse date strings safely (handles timezone issues)
 const parseDateSafe = (dateString: string | undefined): Date | undefined => {
@@ -44,64 +70,14 @@ const parseDateSafe = (dateString: string | undefined): Date | undefined => {
 const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
   ({ className, error, success, onDateChange, onChange, helperText, id, value, min, max, placeholder, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement | null>(null)
+    const triggerRef = React.useRef<HTMLButtonElement>(null)
+    const containerRef = React.useRef<HTMLDivElement>(null)
     const [isOpen, setIsOpen] = React.useState(false)
     const [isFocused, setIsFocused] = React.useState(false)
     const { isMobile } = useViewport()
-    const [isMounted, setIsMounted] = React.useState(false)
     const generatedId = React.useId()
     const datePickerId = id || generatedId
     const helperId = helperText ? `${datePickerId}-helper` : undefined
-
-    // Ensure component is mounted before rendering
-    React.useLayoutEffect(() => {
-      setIsMounted(true)
-    }, [])
-
-    // DOM cleanup: Remove any react-datepicker popper elements on mobile
-    React.useEffect(() => {
-      if (!isMounted || !isMobile) return
-
-      const cleanupPoppers = () => {
-        // Find and remove any popper elements
-        const poppers = document.querySelectorAll('.react-datepicker-popper')
-        poppers.forEach(popper => {
-          if (popper.parentNode) {
-            popper.parentNode.removeChild(popper)
-          }
-        })
-
-        // Also check the portal container
-        const portalContainer = document.getElementById('react-datepicker-root')
-        if (portalContainer) {
-          const portalPoppers = portalContainer.querySelectorAll('.react-datepicker-popper')
-          portalPoppers.forEach(popper => {
-            if (popper.parentNode) {
-              popper.parentNode.removeChild(popper)
-            }
-          })
-        }
-      }
-
-      // Cleanup immediately and on interval (in case poppers are created later)
-      cleanupPoppers()
-      const interval = setInterval(cleanupPoppers, 100)
-
-      return () => {
-        clearInterval(interval)
-      }
-    }, [isMounted, isMobile])
-
-    // Ensure portal element exists
-    React.useEffect(() => {
-      if (typeof document !== 'undefined') {
-        let portalElement = document.getElementById('react-datepicker-root')
-        if (!portalElement) {
-          portalElement = document.createElement('div')
-          portalElement.id = 'react-datepicker-root'
-          document.body.appendChild(portalElement)
-        }
-      }
-    }, [])
 
     // Parse value to Date object (timezone-safe)
     const selectedDate = React.useMemo(() => {
@@ -121,32 +97,37 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       return date && isValid(date) ? startOfDay(date) : undefined
     }, [max])
 
-    // Calculate openToDate - ensure it's within min/max bounds
+    // Calculate openToDate - ensure it's within min/max bounds and uses middle of valid year range
     const openToDate = React.useMemo(() => {
-      // If a date is selected, use it
-      if (selectedDate) {
-        return selectedDate
-      }
+      if (selectedDate) return selectedDate
       
-      // For date of birth fields, default to ~25-30 years ago (more reasonable than maxDate)
-      // This provides a better UX than defaulting to the minimum allowed age
+      const currentYear = new Date().getFullYear()
+      const validMinYear = minDate ? minDate.getFullYear() : currentYear - 100
+      const validMaxYear = maxDate ? maxDate.getFullYear() : currentYear - 18
+      const middleYear = Math.floor((validMinYear + validMaxYear) / 2)
       const today = new Date()
-      let defaultDate = new Date(today.getFullYear() - 25, today.getMonth(), today.getDate())
+      let defaultDate = new Date(middleYear, today.getMonth(), today.getDate())
       
-      // Ensure defaultDate is within bounds
-      if (minDate && defaultDate < minDate) {
-        defaultDate = minDate
-      }
-      if (maxDate && defaultDate > maxDate) {
-        // If our default is beyond maxDate, use maxDate but go back a bit more
-        // to show a reasonable range (e.g., if maxDate is 18 years ago, show 20-25 years ago)
-        const maxDateObj = new Date(maxDate)
-        const adjustedDate = new Date(maxDateObj.getFullYear() - 5, maxDateObj.getMonth(), maxDateObj.getDate())
-        defaultDate = (minDate && adjustedDate < minDate) ? maxDate : adjustedDate
-      }
+      if (minDate && defaultDate < minDate) defaultDate = minDate
+      if (maxDate && defaultDate > maxDate) defaultDate = maxDate
       
       return startOfDay(defaultDate)
     }, [selectedDate, minDate, maxDate])
+
+    // Calendar state
+    const [currentMonth, setCurrentMonth] = React.useState(() => startOfMonth(openToDate))
+
+    // Sync currentMonth when openToDate changes
+    React.useEffect(() => {
+      const newMonth = startOfMonth(openToDate)
+      if (minDate && isBefore(newMonth, startOfMonth(minDate))) {
+        setCurrentMonth(startOfMonth(minDate))
+      } else if (maxDate && isAfter(newMonth, startOfMonth(maxDate))) {
+        setCurrentMonth(startOfMonth(maxDate))
+      } else {
+        setCurrentMonth(newMonth)
+      }
+    }, [openToDate, minDate, maxDate])
 
     // Format date for input display
     const displayValue = React.useMemo(() => {
@@ -155,61 +136,34 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
     }, [selectedDate])
 
     // Handle date selection
-    const handleDateChange = React.useCallback(
-      (date: Date | null) => {
-        if (!date) {
-          const syntheticEvent = {
-            target: { value: "" },
-            currentTarget: { value: "" },
-          } as React.ChangeEvent<HTMLInputElement>
-          onChange?.(syntheticEvent)
-          onDateChange?.("")
-          setIsOpen(false)
-          return
-        }
+    const handleDateChange = React.useCallback((date: Date) => {
+      const formattedDate = format(date, "yyyy-MM-dd")
+      const syntheticEvent = {
+        target: { value: formattedDate },
+        currentTarget: { value: formattedDate },
+      } as React.ChangeEvent<HTMLInputElement>
 
-        const formattedDate = format(date, "yyyy-MM-dd")
-        const syntheticEvent = {
-          target: { value: formattedDate },
-          currentTarget: { value: formattedDate },
-        } as React.ChangeEvent<HTMLInputElement>
+      onChange?.(syntheticEvent)
+      onDateChange?.(formattedDate)
+      setIsOpen(false)
+    }, [onChange, onDateChange])
 
-        onChange?.(syntheticEvent)
-        onDateChange?.(formattedDate)
+    // Handle manual input
+    const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const inputValue = e.target.value.trim()
+      if (!inputValue) {
+        onChange?.(e)
+        onDateChange?.("")
+        return
+      }
 
-        const closeDelay = isMobile ? 300 : 150
-        setTimeout(() => {
-          setIsOpen(false)
-          if (!isMobile) {
-            setTimeout(() => {
-              inputRef.current?.focus()
-            }, 50)
-          }
-        }, closeDelay)
-      },
-      [onChange, onDateChange, isMobile]
-    )
-
-    // Handle manual input (desktop only)
-    const handleInputChange = React.useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = e.target.value
-
-        if (!inputValue) {
-          onChange?.(e)
-          onDateChange?.("")
-          return
-        }
-
-        // Try to parse MM/dd/yyyy format
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputValue)) {
-          const [month, day, year] = inputValue.split("/")
-          const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-
-          if (isValid(parsedDate)) {
-            if (minDate && parsedDate < minDate) return
-            if (maxDate && parsedDate > maxDate) return
-
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputValue)) {
+        const [month, day, year] = inputValue.split("/").map(Number)
+        const parsedDate = new Date(Date.UTC(year, month - 1, day))
+        
+        if (isValid(parsedDate)) {
+          const dateStart = startOfDay(parsedDate)
+          if ((!minDate || dateStart >= startOfDay(minDate)) && (!maxDate || dateStart <= startOfDay(maxDate))) {
             const formattedDate = format(parsedDate, "yyyy-MM-dd")
             e.target.value = formattedDate
             onChange?.(e)
@@ -217,251 +171,289 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
             return
           }
         }
+      }
 
-        onChange?.(e)
-      },
-      [onChange, onDateChange, minDate, maxDate]
-    )
+      onChange?.(e)
+    }, [onChange, onDateChange, minDate, maxDate])
 
-    // Handle input focus
-    const handleInputFocus = React.useCallback(
-      (e: React.FocusEvent<HTMLInputElement>) => {
-        setIsFocused(true)
-        props.onFocus?.(e)
-      },
-      [props]
-    )
+    // Generate year options
+    const yearOptions = React.useMemo(() => {
+      const currentYear = getYear(new Date())
+      const startYear = minDate ? getYear(minDate) : currentYear - 100
+      const endYear = maxDate ? getYear(maxDate) : currentYear - 18
+      return Array.from({ length: endYear - startYear + 1 }, (_, i) => ({
+        value: (startYear + i).toString(),
+        label: (startYear + i).toString(),
+      }))
+    }, [minDate, maxDate])
 
-    const handleInputBlur = React.useCallback(
-      (e: React.FocusEvent<HTMLInputElement>) => {
-        setIsFocused(false)
-        props.onBlur?.(e)
-      },
-      [props]
-    )
+    // Generate month options
+    const monthOptions = React.useMemo(() => {
+      const currentYearValue = getYear(currentMonth)
+      const isCurrentYearMin = minDate && getYear(minDate) === currentYearValue
+      const isCurrentYearMax = maxDate && getYear(maxDate) === currentYearValue
+      
+      return MONTHS.map((month, index) => {
+        const monthDate = new Date(currentYearValue, index, 1)
+        const monthStart = startOfMonth(monthDate)
+        
+        let isDisabled = false
+        if (isCurrentYearMin && minDate) {
+          isDisabled = isBefore(monthStart, startOfMonth(minDate))
+        }
+        if (isCurrentYearMax && maxDate) {
+          isDisabled = isDisabled || isAfter(monthStart, startOfMonth(maxDate))
+        }
+        
+        return {
+          value: index.toString(),
+          label: month,
+          disabled: isDisabled,
+        }
+      })
+    }, [currentMonth, minDate, maxDate])
 
-    // Handle calendar open - ensure openToDate is respected
-    const handleCalendarOpen = React.useCallback(() => {
-      setIsOpen(true)
+    // Clamp date to valid range
+    const clampToValidRange = React.useCallback((date: Date): Date => {
+      let clamped = date
+      if (minDate && isBefore(clamped, startOfMonth(minDate))) {
+        clamped = startOfMonth(minDate)
+      }
+      if (maxDate && isAfter(clamped, startOfMonth(maxDate))) {
+        clamped = startOfMonth(maxDate)
+      }
+      return clamped
+    }, [minDate, maxDate])
+
+    // Handle month change
+    const handleMonthChange = React.useCallback((monthIndex: string) => {
+      const monthNum = parseInt(monthIndex, 10)
+      if (isNaN(monthNum) || monthNum < 0 || monthNum > 11) return
+      const newDate = setMonth(currentMonth, monthNum)
+      const clamped = clampToValidRange(startOfMonth(newDate))
+      setCurrentMonth(clamped)
+    }, [currentMonth, clampToValidRange])
+
+    // Handle year change
+    const handleYearChange = React.useCallback((year: string) => {
+      const yearNum = parseInt(year, 10)
+      if (isNaN(yearNum)) return
+      const newDate = setYear(currentMonth, yearNum)
+      const clamped = clampToValidRange(startOfMonth(newDate))
+      setCurrentMonth(clamped)
+    }, [currentMonth, clampToValidRange])
+
+    // Handle previous month
+    const handlePreviousMonth = React.useCallback(() => {
+      const newMonth = subMonths(currentMonth, 1)
+      if (minDate && isBefore(newMonth, startOfMonth(minDate))) return
+      setCurrentMonth(newMonth)
+    }, [currentMonth, minDate])
+
+    // Handle next month
+    const handleNextMonth = React.useCallback(() => {
+      const newMonth = addMonths(currentMonth, 1)
+      if (maxDate && isAfter(newMonth, startOfMonth(maxDate))) return
+      setCurrentMonth(newMonth)
+    }, [currentMonth, maxDate])
+
+    // Handle date click
+    const handleDateClick = React.useCallback((date: Date) => {
+      const dateStart = startOfDay(date)
+      if (minDate && isBefore(dateStart, startOfDay(minDate))) return
+      if (maxDate && isAfter(dateStart, startOfDay(maxDate))) return
+      handleDateChange(dateStart)
+    }, [handleDateChange, minDate, maxDate])
+
+    // Get calendar days
+    const calendarDays = React.useMemo(() => {
+      const monthStart = startOfMonth(currentMonth)
+      const monthEnd = endOfMonth(currentMonth)
+      const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
+      const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
+      return eachDayOfInterval({ start: calendarStart, end: calendarEnd })
+    }, [currentMonth])
+
+    // Check if date is disabled
+    const isDateDisabled = React.useCallback((date: Date): boolean => {
+      const dateStart = startOfDay(date)
+      if (minDate && isBefore(dateStart, startOfDay(minDate))) return true
+      if (maxDate && isAfter(dateStart, startOfDay(maxDate))) return true
+      return false
+    }, [minDate, maxDate])
+
+    // Handle toggle
+    const handleToggle = React.useCallback(() => {
+      setIsOpen(prev => !prev)
     }, [])
 
-    // Handle close
     const handleClose = React.useCallback(() => {
       setIsOpen(false)
     }, [])
 
-    // Prevent body scroll when mobile sheet is open
-    React.useEffect(() => {
-      if (isMobile && isOpen) {
-        document.body.style.overflow = 'hidden'
-        return () => {
-          document.body.style.overflow = ''
-        }
-      }
-    }, [isMobile, isOpen])
-
     // Handle escape key
     React.useEffect(() => {
       if (!isOpen) return
-
       const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          handleClose()
-        }
+        if (e.key === 'Escape') handleClose()
       }
-
       document.addEventListener('keydown', handleEscape)
-      return () => {
-        document.removeEventListener('keydown', handleEscape)
-      }
+      return () => document.removeEventListener('keydown', handleEscape)
     }, [isOpen, handleClose])
 
-
-    // Update gradient indicators based on scroll position
+    // Prevent body scroll on mobile (using centralized scroll lock)
     React.useEffect(() => {
-      if (!isOpen) return
-
-      const updateGradients = (element: HTMLElement | null) => {
-        if (!element) return
-
-        const { scrollTop, scrollHeight, clientHeight } = element
-        const isScrollable = scrollHeight > clientHeight
-        const isAtTop = scrollTop <= 1
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
-
-        if (isScrollable && !isAtTop) {
-          element.setAttribute("data-scrolled", "true")
-        } else {
-          element.removeAttribute("data-scrolled")
-        }
-
-        if (isScrollable && !isAtBottom) {
-          element.setAttribute("data-at-bottom", "false")
-        } else {
-          element.setAttribute("data-at-bottom", "true")
-        }
+      if (isMobile && isOpen) {
+        lockBodyScroll()
+        return () => unlockBodyScroll()
       }
+    }, [isMobile, isOpen])
 
-      const handleScroll = (e: Event) => {
-        const target = e.target as HTMLElement | null
-        if (
-          target &&
-          target.classList &&
-          (target.classList.contains("react-datepicker__month-dropdown") ||
-          target.classList.contains("react-datepicker__year-dropdown"))
-        ) {
-          updateGradients(target)
-        }
-      }
+    // Calendar component
+    const CalendarContent = () => (
+      <div className="w-full bg-card rounded-xl border border-border shadow-xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-brand/10 to-brand-accent/10 border-b border-border p-4 flex-shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={handlePreviousMonth}
+              disabled={minDate && isBefore(subMonths(currentMonth, 1), startOfMonth(minDate))}
+              className={cn(
+                "p-2 rounded-lg transition-all duration-200",
+                "hover:bg-accent active:scale-95",
+                "disabled:opacity-30 disabled:cursor-not-allowed",
+                "touch-manipulation h-10 w-10 flex items-center justify-center flex-shrink-0"
+              )}
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </button>
 
-      const checkGradients = () => {
-        const monthDropdown = document.querySelector(".react-datepicker__month-dropdown") as HTMLElement
-        const yearDropdown = document.querySelector(".react-datepicker__year-dropdown") as HTMLElement
-        updateGradients(monthDropdown)
-        updateGradients(yearDropdown)
-      }
+            <div className="flex items-center gap-2 flex-1 justify-center min-w-0">
+              <div className="w-[145px] flex-shrink-0">
+                <CustomDropdown
+                  value={getMonth(currentMonth).toString()}
+                  onChange={handleMonthChange}
+                  options={monthOptions}
+                  className="h-10 text-sm"
+                />
+              </div>
+              <div className="w-[95px] flex-shrink-0">
+                <CustomDropdown
+                  value={getYear(currentMonth).toString()}
+                  onChange={handleYearChange}
+                  options={yearOptions}
+                  className="h-10 text-sm"
+                />
+              </div>
+            </div>
 
-      const initialCheck = setTimeout(checkGradients, 150)
-
-      const calendarContainer = document.querySelector(".react-datepicker")
-      const observer = calendarContainer ? new MutationObserver(checkGradients) : null
-
-      if (observer && calendarContainer) {
-        observer.observe(calendarContainer, { childList: true, subtree: true })
-      }
-
-      document.addEventListener("scroll", handleScroll, true)
-      window.addEventListener("resize", checkGradients)
-
-      return () => {
-        clearTimeout(initialCheck)
-        observer?.disconnect()
-        document.removeEventListener("scroll", handleScroll, true)
-        window.removeEventListener("resize", checkGradients)
-      }
-    }, [isOpen])
-
-    // Custom input component
-    const CustomInput = React.forwardRef<HTMLInputElement, { value?: string; onClick?: () => void }>(
-      ({ onClick }, forwardedRef) => (
-        <div className="relative">
-          <input
-            ref={(node) => {
-              inputRef.current = node
-              if (typeof forwardedRef === "function") {
-                forwardedRef(node)
-              } else if (forwardedRef && typeof forwardedRef === "object" && "current" in forwardedRef) {
-                const mutableRef = forwardedRef as React.MutableRefObject<HTMLInputElement | null>
-                if (mutableRef.current !== undefined) {
-                  mutableRef.current = node
-                }
-              }
-              if (typeof ref === "function") {
-                ref(node)
-              } else if (ref && typeof ref === "object" && "current" in ref) {
-                const mutableRef = ref as React.MutableRefObject<HTMLInputElement | null>
-                if (mutableRef.current !== undefined) {
-                  mutableRef.current = node
-                }
-              }
-            }}
-            id={datePickerId}
-            type="text"
-            value={displayValue}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-            onClick={onClick}
-            readOnly
-            placeholder={placeholder || "MM/DD/YYYY"}
-            className={cn(
-              "flex h-11 sm:h-10 w-full rounded-lg border bg-background px-3 py-2.5 sm:py-2 pr-10 text-base sm:text-sm",
-              "placeholder:text-muted-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              "transition-colors duration-200",
-              isFocused && "ring-2 ring-primary ring-offset-2",
-              error && "border-error focus-visible:ring-error",
-              success && "border-success focus-visible:ring-success",
-              !error && !success && "border-input",
-              className
-            )}
-            aria-invalid={error ? "true" : undefined}
-            aria-describedby={helperId}
-            {...props}
-          />
-          <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-              "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md",
-              "text-muted-foreground hover:text-foreground",
-              "transition-colors duration-200",
-              "touch-manipulation min-h-[32px] min-w-[32px] flex items-center justify-center"
-            )}
-            aria-label="Open calendar"
-          >
-            <Calendar className="h-4 w-4" />
-          </button>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              disabled={maxDate && isAfter(addMonths(currentMonth, 1), startOfMonth(maxDate))}
+              className={cn(
+                "p-2 rounded-lg transition-all duration-200",
+                "hover:bg-accent active:scale-95",
+                "disabled:opacity-30 disabled:cursor-not-allowed",
+                "touch-manipulation h-10 w-10 flex items-center justify-center flex-shrink-0"
+              )}
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-5 w-5 text-foreground" />
+            </button>
+          </div>
         </div>
-      )
+
+        {/* Calendar Body */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Day names */}
+          <div className="grid grid-cols-7 gap-1.5 px-4 pt-4 pb-2 bg-card flex-shrink-0">
+            {DAYS.map((day) => (
+              <div
+                key={day}
+                className="text-center text-xs font-semibold text-muted-foreground py-1.5"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar grid - Fixed 7 columns, no overflow */}
+          <div className="grid grid-cols-7 gap-1.5 px-4 pb-4 bg-card flex-shrink-0">
+            {calendarDays.map((date, idx) => {
+              const isCurrentMonth = isSameMonth(date, currentMonth)
+              const isSelected = selectedDate && isSameDay(date, selectedDate)
+              const isToday = isSameDay(date, new Date())
+              const isDisabled = isDateDisabled(date)
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleDateClick(date)}
+                  disabled={isDisabled}
+                  className={cn(
+                    "aspect-square rounded-lg text-sm font-medium transition-all duration-200",
+                    "touch-manipulation w-full h-full min-h-[40px] flex items-center justify-center",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    !isCurrentMonth && "text-muted-foreground/40",
+                    isCurrentMonth && !isSelected && !isToday && "text-foreground hover:bg-accent",
+                    isToday && !isSelected && "bg-brand-soft text-foreground font-semibold border border-brand/30",
+                    isSelected && "gradient-brand text-white shadow-md font-semibold scale-105",
+                    isDisabled && "opacity-30 cursor-not-allowed hover:bg-transparent"
+                  )}
+                  aria-label={format(date, "MMMM d, yyyy")}
+                  aria-disabled={isDisabled}
+                >
+                  {format(date, "d")}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     )
-    CustomInput.displayName = "CustomInput"
 
-    // Popper modifiers for viewport constraint (using any to bypass type checking for react-datepicker compatibility)
-    const popperModifiers = React.useMemo(() => [
-      {
-        name: 'preventOverflow',
-        options: {
-          rootBoundary: 'viewport',
-          tether: false,
-          altAxis: true,
-          padding: 8, // 8px padding from viewport edges
-        },
-      },
-      {
-        name: 'flip',
-        options: {
-          fallbackPlacements: ['top', 'bottom', 'left', 'right'],
-          rootBoundary: 'viewport',
-          padding: 8,
-        },
-      },
-      {
-        name: 'offset',
-        options: {
-          offset: [0, 8], // 8px gap from input
-        },
-      },
-    ] as any, [])
-
-    // DatePicker component props
-    const datePickerProps = {
-      key: `datepicker-${openToDate?.getTime()}`,
-      selected: selectedDate,
-      onChange: handleDateChange,
-      minDate,
-      maxDate,
-      openToDate,
-      startDate: openToDate,
-      showMonthDropdown: true,
-      showYearDropdown: true,
-      dropdownMode: 'select' as const,
-      yearDropdownItemNumber: isMobile ? 5 : 12,
-      scrollableYearDropdown: true,
-      dateFormat: "MM/dd/yyyy",
-      customInput: <CustomInput />,
-      open: !isMobile ? isOpen : false, // Only control open state for desktop
-      onCalendarOpen: handleCalendarOpen,
-      onCalendarClose: handleClose,
-    }
-
-    // Mobile Bottom Sheet - Using custom MobileCalendar (NO ReactDatePicker)
-    const mobileSheetContent = (
+    // Desktop Modal Calendar - Centered on screen
+    const desktopModalContent = (
       <>
         {/* Backdrop */}
         <motion.div
-          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleClose}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          aria-hidden="true"
+        />
+        
+        {/* Centered Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -20 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`${datePickerId}-modal-title`}
+        >
+          <div 
+            className="w-full max-w-[420px] pointer-events-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CalendarContent />
+          </div>
+        </motion.div>
+      </>
+    )
+
+    // Mobile bottom sheet
+    const mobileSheetContent = (
+      <>
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -469,10 +461,7 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           className="fixed inset-0 bg-black/50 z-40"
           aria-hidden="true"
         />
-
-        {/* Bottom Sheet */}
         <motion.div
-          key="sheet"
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
@@ -482,15 +471,9 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           aria-modal="true"
           aria-labelledby={`${datePickerId}-sheet-title`}
         >
-          {/* Swipe indicator */}
-          <div className="block w-12 h-1 bg-muted rounded-full mx-auto mt-3 mb-2" />
-
-          {/* Header */}
+          <div className="w-12 h-1 bg-muted rounded-full mx-auto mt-3 mb-2" />
           <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
-            <h2
-              id={`${datePickerId}-sheet-title`}
-              className="text-lg font-semibold text-foreground"
-            >
+            <h2 id={`${datePickerId}-sheet-title`} className="text-lg font-semibold text-foreground">
               Select Date
             </h2>
             <button
@@ -501,16 +484,8 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
               <X className="h-5 w-5" />
             </button>
           </div>
-
-          {/* Mobile Calendar Content - NO ReactDatePicker */}
           <div className="flex-1 overflow-y-auto p-4">
-            <MobileCalendar
-              selected={selectedDate}
-              onChange={handleDateChange}
-              minDate={minDate}
-              maxDate={maxDate}
-              openToDate={openToDate}
-            />
+            <CalendarContent />
           </div>
         </motion.div>
       </>
@@ -518,78 +493,78 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
 
     return (
       <>
-        <div className="relative w-full">
-          {/* Desktop: Standard Popover - ONLY render when NOT mobile AND mounted */}
-          {isMounted && !isMobile ? (
-            <ReactDatePicker
-              {...datePickerProps}
-              popperPlacement="bottom-start"
-              portalId="react-datepicker-root"
-              popperModifiers={popperModifiers}
-              popperProps={{
-                positionFixed: true,
-              } as any}
-              popperClassName="react-datepicker-popper-container"
+        <div ref={containerRef} className="relative w-full">
+          {/* Input */}
+          <div className="relative">
+            <input
+              ref={(node) => {
+                inputRef.current = node
+                if (typeof ref === "function") {
+                  ref(node)
+                } else if (ref && typeof ref === "object" && "current" in ref) {
+                  (ref as React.MutableRefObject<HTMLInputElement | null>).current = node
+                }
+              }}
+              id={datePickerId}
+              type="text"
+              value={displayValue}
+              onChange={handleInputChange}
+              onClick={handleToggle}
+              onFocus={(e) => {
+                setIsFocused(true)
+                if (!isMobile) {
+                  setIsOpen(true)
+                }
+                props.onFocus?.(e)
+              }}
+              onBlur={(e) => {
+                setIsFocused(false)
+                props.onBlur?.(e)
+              }}
+              readOnly
+              placeholder={placeholder || "MM/DD/YYYY"}
+              className={cn(
+                "flex h-11 sm:h-10 w-full rounded-lg border bg-background px-3 py-2.5 sm:py-2 pr-10 text-base sm:text-sm",
+                "placeholder:text-muted-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                "transition-colors duration-200",
+                "cursor-pointer",
+                isFocused && "ring-2 ring-primary ring-offset-2",
+                error && "border-error focus-visible:ring-error",
+                success && "border-success focus-visible:ring-success",
+                !error && !success && "border-input",
+                className
+              )}
+              aria-invalid={error ? "true" : undefined}
+              aria-describedby={helperId}
+              {...props}
             />
-          ) : isMounted && isMobile ? (
-            // Mobile: Simple input ONLY - NO ReactDatePicker at all
-            <CustomInput onClick={handleCalendarOpen} />
-          ) : (
-            // Loading state: render input without datepicker until mounted
-            <div className="relative">
-              <input
-                ref={(node) => {
-                  inputRef.current = node
-                  if (typeof ref === "function") {
-                    ref(node)
-                  } else if (ref && typeof ref === "object" && "current" in ref) {
-                    const mutableRef = ref as React.MutableRefObject<HTMLInputElement | null>
-                    if (mutableRef.current !== undefined) {
-                      mutableRef.current = node
-                    }
-                  }
-                }}
-                id={datePickerId}
-                type="text"
-                value={displayValue}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-                onClick={handleCalendarOpen}
-                readOnly
-                placeholder={placeholder || "MM/DD/YYYY"}
-                className={cn(
-                  "flex h-11 sm:h-10 w-full rounded-lg border bg-background px-3 py-2.5 sm:py-2 pr-10 text-base sm:text-sm",
-                  "placeholder:text-muted-foreground",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                  "transition-colors duration-200",
-                  isFocused && "ring-2 ring-primary ring-offset-2",
-                  error && "border-error focus-visible:ring-error",
-                  success && "border-success focus-visible:ring-success",
-                  !error && !success && "border-input",
-                  className
-                )}
-                aria-invalid={error ? "true" : undefined}
-                aria-describedby={helperId}
-                {...props}
-              />
-              <button
-                type="button"
-                onClick={handleCalendarOpen}
-                className={cn(
-                  "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md",
-                  "text-muted-foreground hover:text-foreground",
-                  "transition-colors duration-200",
-                  "touch-manipulation min-h-[32px] min-w-[32px] flex items-center justify-center"
-                )}
-                aria-label="Open calendar"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-            </div>
+            <button
+              ref={triggerRef}
+              type="button"
+              onClick={handleToggle}
+              className={cn(
+                "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md",
+                "text-muted-foreground hover:text-foreground",
+                "transition-colors duration-200",
+                "touch-manipulation min-h-[32px] min-w-[32px] flex items-center justify-center"
+              )}
+              aria-label="Open calendar"
+            >
+              <Calendar className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Desktop Modal - Centered on screen */}
+          {!isMobile && typeof document !== 'undefined' && createPortal(
+            <AnimatePresence mode="wait">
+              {isOpen ? desktopModalContent : null}
+            </AnimatePresence>,
+            document.body
           )}
 
+          {/* Helper text */}
           {helperText && (
             <p
               id={helperId}
@@ -605,8 +580,8 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           )}
         </div>
 
-        {/* Mobile Bottom Sheet Portal - Fixed AnimatePresence wrapping */}
-        {typeof document !== 'undefined' && isMounted && isMobile && createPortal(
+        {/* Mobile Bottom Sheet Portal */}
+        {isMobile && typeof document !== 'undefined' && createPortal(
           <AnimatePresence mode="wait">
             {isOpen ? mobileSheetContent : null}
           </AnimatePresence>,
@@ -619,4 +594,3 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
 DatePicker.displayName = "DatePicker"
 
 export { DatePicker }
-

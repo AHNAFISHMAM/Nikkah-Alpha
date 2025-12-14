@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Search, AlertCircle, Loader2 } from 'lucide-react'
+import { SkeletonGrid, Skeleton } from '../../components/common/Skeleton'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -87,12 +88,20 @@ export function Modules() {
         <SEO {...PAGE_SEO.modules} />
         <div className="min-h-screen bg-background">
           <div className="container mx-auto px-4 py-8 sm:py-12 max-w-6xl">
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center">
-                <Loader2 className="h-10 w-10 animate-spin text-islamic-gold mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading modules...</p>
-              </div>
+            {/* Header Skeleton */}
+            <div className="mb-6 sm:mb-8">
+              <Skeleton variant="text" height={32} width="40%" className="mb-2" />
+              <Skeleton variant="text" height={20} width="60%" />
             </div>
+            
+            {/* Search and Sort Skeleton */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              <Skeleton variant="rectangular" height={44} width="100%" className="sm:flex-1" />
+              <Skeleton variant="rectangular" height={44} width="100%" className="sm:w-48" />
+            </div>
+            
+            {/* Modules Grid Skeleton */}
+            <SkeletonGrid count={6} />
           </div>
         </div>
       </>
@@ -143,7 +152,11 @@ export function Modules() {
       >
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-6xl">
           {/* Header */}
-          <motion.div variants={ITEM_VARIANTS} className="mb-8 sm:mb-12">
+          <motion.div 
+            variants={ITEM_VARIANTS} 
+            className="mb-8 sm:mb-12"
+            style={{ willChange: 'transform, opacity' }}
+          >
             <div className="flex items-center gap-3 sm:gap-4 mb-4">
               <div className="p-2 sm:p-3 bg-primary/10 rounded-lg">
                 <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />

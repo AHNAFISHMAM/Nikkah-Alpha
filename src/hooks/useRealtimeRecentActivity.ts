@@ -1,7 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for recent activity
@@ -12,19 +14,21 @@ export function useRealtimeRecentActivity() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
-  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+  const channelsRef = useRef<RealtimeChannel[]>([])
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['recent-activity'] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['recent-activity'] })
+      }
     }, 500) // 500ms debounce for activity (slightly longer to batch multiple changes)
-  }
+  }, [queryClient])
 
   useEffect(() => {
     if (!user?.id || !supabase) return
@@ -60,7 +64,7 @@ export function useRealtimeRecentActivity() {
         if (isMountedRef.current && status !== 'CLOSED') {
           // Silently handle - these are often expected scenarios
           // Realtime may not be enabled for all tables, or connection may drop temporarily
-          console.debug(`[${channelName}] Channel status: ${status}`)
+          logDebug(`[${channelName}] Channel status: ${status}`, undefined, 'useRealtimeRecentActivity')
         }
       }
     }
@@ -188,7 +192,7 @@ export function useRealtimeRecentActivity() {
       channelsRef.current = []
       setIsConnected(false)
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 
   return { isConnected }
 }

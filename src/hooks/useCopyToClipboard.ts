@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import { logError } from '../lib/error-handler'
 
 /**
  * Hook for copying text to clipboard with toast feedback
@@ -33,7 +34,7 @@ export function useCopyToClipboard() {
       })
       return true
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
+      logError('Failed to copy to clipboard', error, 'useCopyToClipboard')
       toast.error('Failed to copy. Please try again.', {
         duration: 3000,
         position: 'top-center',

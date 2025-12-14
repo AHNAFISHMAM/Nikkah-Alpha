@@ -132,7 +132,14 @@ export const ThemeToggle = memo(function ThemeToggle({
                 className={cn('flex items-center justify-center', iconColorClass)}
               >
                 <span style={{ color: iconColorValue, display: 'inline-flex' }}>
-                  <FaCloud size={config.iconSize} color={iconColorValue} aria-hidden="true" />
+                  <FaCloud 
+                    size={config.iconSize} 
+                    color={iconColorValue} 
+                    aria-hidden="true"
+                    style={{
+                      filter: 'drop-shadow(-0.5px -0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(0.5px -0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(-0.5px 0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(0.5px 0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(0 -0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(0 0.5px 0 rgba(0, 0, 0, 0.3)) drop-shadow(-0.5px 0 0 rgba(0, 0, 0, 0.3)) drop-shadow(0.5px 0 0 rgba(0, 0, 0, 0.3))',
+                    }}
+                  />
                 </span>
               </motion.div>
             )}

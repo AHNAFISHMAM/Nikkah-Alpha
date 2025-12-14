@@ -5,7 +5,8 @@ import { useLocation } from 'react-router-dom'
  * ScrollToTop Component
  * 
  * Automatically scrolls to the top of the page when the route changes.
- * Works for both window scroll (public pages) and scrollable containers (dashboard layout).
+ * Works for both html element scroll (public pages) and scrollable containers (dashboard layout).
+ * Best Practice: Uses document.documentElement.scrollTo() for public pages since html is the scroll container.
  * Mobile-first: Optimized for smooth scrolling on all devices.
  */
 export function ScrollToTop() {
@@ -25,8 +26,9 @@ export function ScrollToTop() {
           behavior: 'smooth',
         })
       } else {
-        // Fallback to window scroll (public pages)
-        window.scrollTo({
+        // Fix: Use html element scroll for public pages (html is the scroll container)
+        const htmlElement = document.documentElement
+        htmlElement.scrollTo({
           top: 0,
           left: 0,
           behavior: 'smooth',

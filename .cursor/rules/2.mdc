@@ -1,4 +1,4 @@
 ---
-alwaysApply: true
+alwaysApply: false
 ---
 never skip rule number 1 the first rule and always reasearch online for the best practices

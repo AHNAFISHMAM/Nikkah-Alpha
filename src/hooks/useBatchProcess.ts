@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import toast from 'react-hot-toast'
+import { logError } from '../lib/error-handler'
 
 /**
  * Hook for batch processing items with progress tracking
@@ -65,7 +65,7 @@ export function useBatchProcess<T, R>() {
               const item = batch[batchIndex]
               const error = result.reason instanceof Error ? result.reason : new Error(String(result.reason))
               options?.onError?.(error, item, i * batchSize + batchIndex)
-              console.error(`Error processing item ${i * batchSize + batchIndex}:`, error)
+              logError(`Error processing item ${i * batchSize + batchIndex}`, error, 'useBatchProcess')
             }
           })
 

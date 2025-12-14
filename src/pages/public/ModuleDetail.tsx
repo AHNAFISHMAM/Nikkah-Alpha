@@ -9,6 +9,7 @@ import { useConfetti } from '../../hooks/useConfetti'
 import { useAutoSaveNotes } from '../../hooks/useAutoSaveNotes'
 import { useRealtimeModuleProgress } from '../../hooks/useRealtimeModuleProgress'
 import { SaveStatusIndicator } from '../../components/modules/SaveStatusIndicator'
+import { logError, logDebug } from '../../lib/logger'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Textarea } from '../../components/ui/Textarea'
@@ -337,7 +338,7 @@ export default function ModuleDetailPage() {
       }
     },
     onError: (error) => {
-      console.error('Save failed:', error)
+      logError('Save failed', error, 'ModuleDetail')
       toast.error('Failed to save')
     },
   })
@@ -456,7 +457,7 @@ export default function ModuleDetailPage() {
 
   const handleDownloadPDF = () => {
     // Use browser print → Save as PDF so Arabic and HTML render correctly
-    console.log('[PDF] Using browser print for full HTML + Arabic rendering', {
+    logDebug('[PDF] Using browser print for full HTML + Arabic rendering', {
       moduleId,
       moduleTitle: module?.title,
     })

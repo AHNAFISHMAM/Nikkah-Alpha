@@ -1,3 +1,5 @@
+import { logError, logDebug } from './logger'
+
 /**
  * Generate PDF from module content with Arabic support and full metadata.
  * Includes: estimated time, learning objectives, key takeaways, reflection questions.
@@ -16,7 +18,7 @@ export async function generateModulePDF(
 ): Promise<void> {
   try {
     // Runtime debug information to verify the new generator is being used
-    console.log('[PDF] generateModulePDF called', {
+    logDebug('[PDF] generateModulePDF called', {
       moduleTitle,
       hasDescription: !!moduleDescription,
       hasContent: !!moduleContent,

@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { logError } from '../lib/error-handler'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for progress stats
@@ -13,18 +14,28 @@ export function useRealtimeProgressStats() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
-  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+  const channelsRef = useRef<RealtimeChannel[]>([])
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['progress-stats'] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['progress-stats'] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient])
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!user?.id || !supabase) return
@@ -183,7 +194,7 @@ export function useRealtimeProgressStats() {
       channelsRef.current = []
       setIsConnected(false)
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 
   return { isConnected }
 }

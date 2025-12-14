@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
@@ -110,19 +110,19 @@ export function Profile() {
     setSelectedThemeForModal(greenTheme)
   }, [greenTheme])
 
-  // Handle theme preview on hover
-  const handleThemePreview = (theme: GreenTheme | null) => {
+  // Handle theme preview on hover - memoized
+  const handleThemePreview = useCallback((theme: GreenTheme | null) => {
     setPreviewTheme(theme)
-  }
+  }, [])
 
-  // Handle theme selection - opens modal
-  const handleThemeSelect = (newTheme: GreenTheme) => {
+  // Handle theme selection - opens modal - memoized
+  const handleThemeSelect = useCallback((newTheme: GreenTheme) => {
     setSelectedThemeForModal(newTheme)
     setShowThemeModal(true)
-  }
+  }, [])
 
-  // Handle theme apply from modal
-  const handleThemeApply = (newTheme: GreenTheme) => {
+  // Handle theme apply from modal - memoized
+  const handleThemeApply = useCallback((newTheme: GreenTheme) => {
     const meta = getThemeMeta(newTheme)
     changeTheme(newTheme)
     setPreviewTheme(null)

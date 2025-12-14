@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for financial data
@@ -12,23 +13,25 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimeFinancialData() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+  const channelsRef = useRef<RealtimeChannel[]>([])
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['budget', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['mahr', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['wedding-budget', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['savings-goals', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['budget', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['mahr', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['wedding-budget', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['savings-goals', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -143,6 +146,6 @@ export function useRealtimeFinancialData() {
       })
       channelsRef.current = []
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 }
 

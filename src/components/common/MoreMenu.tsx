@@ -8,6 +8,7 @@ import { Portal } from './Portal'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../contexts/AuthContext'
 import { NotificationsBell } from './NotificationsBell'
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/scrollLock'
 import {
   Calculator,
   BookOpen,
@@ -99,13 +100,11 @@ export const MoreMenu = memo(function MoreMenu() {
     }
   }, [isOpen])
 
-  // Prevent body scroll when open on mobile
+  // Prevent body scroll when open on mobile - using centralized scroll lock
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = ''
-      }
+      lockBodyScroll()
+      return () => unlockBodyScroll()
     }
   }, [isOpen])
 

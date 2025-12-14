@@ -199,6 +199,8 @@ export const NOTIFICATION_ROUTES: NotificationRouteConfig[] = [
  * @param notification - Notification object with type and related entity info
  * @returns Complete URL string with path, hash, and query params, or null if no route found
  */
+import { logWarning } from './logger'
+
 export function buildNotificationRoute(notification: {
   type: string
   related_entity_type: string | null
@@ -209,7 +211,7 @@ export function buildNotificationRoute(notification: {
   
   if (!config) {
     // Default fallback: navigate to dashboard
-    console.warn(`[NotificationRoutes] No route configured for notification type: ${notification.type}`)
+    logWarning(`No route configured for notification type: ${notification.type}`, 'NotificationRoutes')
     return '/dashboard'
   }
   

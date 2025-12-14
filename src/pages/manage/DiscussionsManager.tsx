@@ -104,26 +104,24 @@ export function DiscussionsManager() {
       if (data.id) {
         const { error } = await supabase
           .from('discussion_prompts')
-          // @ts-expect-error - Supabase type inference issue
           .update({
             title: data.title,
             description: data.description || null,
             category: data.category,
             order_index: data.order_index,
-          })
+          } as any)
           .eq('id', data.id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('discussion_prompts')
-          // @ts-expect-error - Supabase type inference issue
           .insert({
             title: data.title,
             description: data.description || null,
             category: data.category,
             order_index: data.order_index,
-          })
+          } as any)
 
         if (error) throw error
       }

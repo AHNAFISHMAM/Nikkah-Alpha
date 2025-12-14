@@ -20,7 +20,7 @@
     <link rel="apple-touch-icon" href="/logo.svg" />
     <!-- Additional favicon sizes for better compatibility -->
     <link rel="icon" type="image/svg+xml" sizes="any" href="/logo.svg" />
-    <!-- Force light mode on HTML element -->
+    <!-- Force light mode on HTML element and prevent double scrollbar -->
     <script>
       // Force light mode immediately before React loads
       (function() {
@@ -35,6 +35,24 @@
             localStorage.setItem('nikah-alpha-theme', 'light');
           }
         } catch(e) {}
+        
+        // Prevent double scrollbar on initial load
+        // Check if we're on a dashboard route (starts with /home, /dashboard, etc.)
+        const path = window.location.pathname;
+        const isDashboardRoute = path.startsWith('/home') || 
+                                 path.startsWith('/dashboard') || 
+                                 path.startsWith('/checklist') || 
+                                 path.startsWith('/financial') || 
+                                 path.startsWith('/modules') || 
+                                 path.startsWith('/discussions') || 
+                                 path.startsWith('/resources') || 
+                                 path.startsWith('/profile') ||
+                                 path.startsWith('/manage');
+        
+        // If dashboard route, hide html scrollbar immediately to prevent double scrollbar
+        if (isDashboardRoute) {
+          root.classList.add('dashboard-layout-active');
+        }
       })();
     </script>
     <!-- Theme Preloading: Prevents FOUC (Flash of Unstyled Content) -->
@@ -63,6 +81,40 @@
         body {
           transition: none;
         }
+      }
+      
+      /* ========================================
+         CRITICAL SCROLLBAR FIX - Applied before React loads
+         Ensures custom scrollbar works immediately
+         ======================================== */
+      
+      /* CRITICAL: Hide default scrollbar buttons immediately */
+      html::-webkit-scrollbar-button {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+      }
+      
+      /* CRITICAL: Ensure html is the scroll container */
+      html {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+      }
+      
+      /* CRITICAL: Body never scrolls - content flows to html */
+      body {
+        overflow: visible !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+      }
+      
+      /* CRITICAL: Hide default scrollbar on body */
+      body::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
       }
     </style>
   </head>

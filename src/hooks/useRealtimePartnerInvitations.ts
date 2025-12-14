@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for partner invitations
@@ -11,21 +13,23 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimePartnerInvitations() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['partner-invitations', 'sent', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['partner-invitations', 'received', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['partner', user?.id] }) // Partner connection status
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['partner-invitations', 'sent', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['partner-invitations', 'received', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['partner', user?.id] }) // Partner connection status
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -71,7 +75,7 @@ export function useRealtimePartnerInvitations() {
             invitation.inviter_id === user.id || 
             invitation.invitee_email === user.email
           )) {
-            console.log('[Realtime] Partner invitation change detected:', payload.eventType)
+            logDebug('[Realtime] Partner invitation change detected', payload.eventType, 'useRealtimePartnerInvitations')
             debouncedInvalidate()
           }
         }
@@ -80,9 +84,9 @@ export function useRealtimePartnerInvitations() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Partner invitations channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Partner invitations channel subscribed for user ${user.id}`, undefined, 'useRealtimePartnerInvitations')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Partner invitations channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Partner invitations channel status: ${status} for user ${user.id}`, undefined, 'useRealtimePartnerInvitations')
         }
       })
 
@@ -102,6 +106,6 @@ export function useRealtimePartnerInvitations() {
         channelRef.current = null
       }
     }
-  }, [user?.id, user?.email, queryClient])
+  }, [user?.id, user?.email, queryClient, debouncedInvalidate])
 }
 

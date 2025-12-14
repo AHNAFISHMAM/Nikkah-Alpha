@@ -75,7 +75,7 @@ function DashboardNavComponent() {
               aria-label="Checklist"
             >
               {isPathActive('/checklist') && (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:from-islamic-gold/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:bg-accent/20" />
               )}
               <div className={cn(
                 'relative z-10 transition-transform duration-200',
@@ -111,7 +111,7 @@ function DashboardNavComponent() {
               aria-label="Dashboard"
             >
               {isPathActive('/dashboard') && (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:from-islamic-gold/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:bg-accent/20" />
               )}
               <div className={cn(
                 'relative z-10 transition-transform duration-200',
@@ -146,7 +146,7 @@ function DashboardNavComponent() {
               aria-label="Profile"
             >
               {isPathActive('/profile') && (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:from-islamic-gold/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-xl dark:bg-accent/20" />
               )}
               <div className={cn(
                 'relative z-10 transition-transform duration-200',
@@ -218,7 +218,7 @@ function DashboardNavComponent() {
                 >
                   {/* Translucent brand overlay on active */}
                   {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent dark:from-islamic-gold/20" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent dark:bg-accent/20" />
                   )}
                   <div
                     className={cn(
@@ -259,7 +259,7 @@ function DashboardNavComponent() {
                   aria-current={isPathActive('/manage') ? 'page' : undefined}
                 >
                   {isPathActive('/manage') && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent dark:from-islamic-gold/20" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent dark:bg-accent/20" />
                   )}
                   <div
                     className={cn(

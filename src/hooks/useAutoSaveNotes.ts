@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import { logError } from '../lib/error-handler'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -110,7 +111,7 @@ export function useAutoSaveNotes({
           })
         }, 3000)
       } catch (error) {
-        console.error('Auto-save failed:', error)
+        logError('Auto-save failed', error, 'useAutoSaveNotes')
         setSaveStatus('error')
         
         // Show error toast with retry option

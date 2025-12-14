@@ -1,15 +1,18 @@
-import { memo, useState, useEffect, useMemo, useCallback } from 'react'
+import { memo, useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Label } from '../ui/Label'
 import { CurrencyInput } from './CurrencyInput'
 import { EditViewToggle } from './EditViewToggle'
-import { MobilePieChart } from './MobilePieChart'
-import { MobileBarChart } from './MobileBarChart'
 import { ChartContainer } from './ChartContainer'
 import { ChartModal } from './ChartModal'
 import { ExpenseSummaryCards } from './ExpenseSummaryCards'
+import { Skeleton } from '../common/Skeleton'
+
+// Lazy load chart components for better performance
+const MobilePieChart = lazy(() => import('./MobilePieChart').then(m => ({ default: m.MobilePieChart })))
+const MobileBarChart = lazy(() => import('./MobileBarChart').then(m => ({ default: m.MobileBarChart })))
 import { useBudget, useUpdateBudget } from '../../hooks/useBudget'
 import { useViewport } from '../../hooks/useViewport'
 import { formatCurrency } from '../../lib/utils'
@@ -398,7 +401,9 @@ export const BudgetCalculator = memo(function BudgetCalculator() {
                   <>
                     <h3 className="text-base sm:text-lg font-semibold text-foreground">Expense Breakdown</h3>
                     <ChartContainer minWidth={280}>
-                      <MobilePieChart data={pieChartData} />
+                      <Suspense fallback={<Skeleton variant="rectangular" height={400} className="w-full" />}>
+                        <MobilePieChart data={pieChartData} />
+                      </Suspense>
                     </ChartContainer>
                   </>
                 )}
@@ -422,16 +427,18 @@ export const BudgetCalculator = memo(function BudgetCalculator() {
                   <>
                     <h3 className="text-base sm:text-lg font-semibold text-foreground">Expenses by Category</h3>
                     <ChartContainer minWidth={320}>
-                      <MobileBarChart
-                        data={barChartData}
-                        dataKeys={[
-                          {
-                            key: 'Amount',
-                            name: 'Amount',
-                            color: '#8B5CF6',
-                          },
-                        ]}
-                      />
+                      <Suspense fallback={<Skeleton variant="rectangular" height={400} className="w-full" />}>
+                        <MobileBarChart
+                          data={barChartData}
+                          dataKeys={[
+                            {
+                              key: 'Amount',
+                              name: 'Amount',
+                              color: '#8B5CF6',
+                            },
+                          ]}
+                        />
+                      </Suspense>
                     </ChartContainer>
                   </>
                 )}
@@ -447,7 +454,9 @@ export const BudgetCalculator = memo(function BudgetCalculator() {
             >
               <div className="w-full flex flex-col items-center justify-center" style={{ minHeight: '500px' }}>
                 <ChartContainer minWidth={280}>
-                  <MobilePieChart data={pieChartData} height={450} />
+                  <Suspense fallback={<Skeleton variant="rectangular" height={450} className="w-full" />}>
+                    <MobilePieChart data={pieChartData} height={450} />
+                  </Suspense>
                 </ChartContainer>
               </div>
             </ChartModal>
@@ -460,17 +469,19 @@ export const BudgetCalculator = memo(function BudgetCalculator() {
             >
               <div className="w-full flex flex-col items-center justify-center" style={{ minHeight: '500px' }}>
                 <ChartContainer minWidth={320}>
-                  <MobileBarChart
-                    data={barChartData}
-                    dataKeys={[
-                      {
-                        key: 'Amount',
-                        name: 'Amount',
-                        color: '#8B5CF6',
-                      },
-                    ]}
-                    height={450}
-                  />
+                  <Suspense fallback={<Skeleton variant="rectangular" height={450} className="w-full" />}>
+                    <MobileBarChart
+                      data={barChartData}
+                      dataKeys={[
+                        {
+                          key: 'Amount',
+                          name: 'Amount',
+                          color: '#8B5CF6',
+                        },
+                      ]}
+                      height={450}
+                    />
+                  </Suspense>
                 </ChartContainer>
               </div>
             </ChartModal>

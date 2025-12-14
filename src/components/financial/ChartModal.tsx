@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useEffect, useRef, useState } from 'react'
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/scrollLock'
 
 export interface ChartModalProps {
   isOpen: boolean
@@ -24,10 +25,10 @@ export function ChartModal({ isOpen, onClose, title, description, children }: Ch
   const [isMounted, setIsMounted] = useState(false)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open - using centralized scroll lock
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      lockBodyScroll()
       // Force chart re-render after modal is fully visible
       setIsMounted(false)
       const timer = setTimeout(() => {
@@ -37,7 +38,7 @@ export function ChartModal({ isOpen, onClose, title, description, children }: Ch
       }, 100)
       return () => {
         clearTimeout(timer)
-        document.body.style.overflow = ''
+        unlockBodyScroll()
         setIsMounted(false)
       }
     } else {

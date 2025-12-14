@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { usePartner } from './usePartner'
 import { logError } from '../lib/error-handler'
+import { logWarning, logDebug } from '../lib/logger'
 import type { Profile } from '../types/database'
 
 /**

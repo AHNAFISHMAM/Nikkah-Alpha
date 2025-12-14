@@ -6,7 +6,7 @@ import { Popover } from "./Popover"
 export interface CustomDropdownProps {
   value: string
   onChange: (value: string) => void
-  options: Array<{ value: string; label: string }>
+  options: Array<{ value: string; label: string; disabled?: boolean }>
   placeholder?: string
   className?: string
   disabled?: boolean
@@ -33,6 +33,8 @@ export const CustomDropdown = React.forwardRef<HTMLButtonElement, CustomDropdown
 
 
     const handleSelect = (optionValue: string) => {
+      const option = options.find(opt => opt.value === optionValue)
+      if (option?.disabled) return
       onChange(optionValue)
       setIsOpen(false)
     }
@@ -67,24 +69,43 @@ export const CustomDropdown = React.forwardRef<HTMLButtonElement, CustomDropdown
     }
 
     const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLLIElement>, optionValue: string, index: number) => {
+      const option = options.find(opt => opt.value === optionValue)
+      if (option?.disabled) return
+      
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         handleSelect(optionValue)
       } else if (e.key === 'ArrowDown') {
         e.preventDefault()
-        const nextOption = document.querySelector(
-          `[data-dropdown-id="${dropdownId}"] [role="option"]:nth-child(${index + 2})`
-        ) as HTMLElement
-        nextOption?.focus()
+        // Find next enabled option
+        let nextIndex = index + 1
+        while (nextIndex < options.length && options[nextIndex]?.disabled) {
+          nextIndex++
+        }
+        if (nextIndex < options.length) {
+          const nextOption = document.querySelector(
+            `[data-dropdown-id="${dropdownId}"] [role="option"]:nth-child(${nextIndex + 1})`
+          ) as HTMLElement
+          nextOption?.focus()
+        }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         if (index === 0) {
           triggerRef.current?.focus()
         } else {
-          const prevOption = document.querySelector(
-            `[data-dropdown-id="${dropdownId}"] [role="option"]:nth-child(${index})`
-          ) as HTMLElement
-          prevOption?.focus()
+          // Find previous enabled option
+          let prevIndex = index - 1
+          while (prevIndex >= 0 && options[prevIndex]?.disabled) {
+            prevIndex--
+          }
+          if (prevIndex >= 0) {
+            const prevOption = document.querySelector(
+              `[data-dropdown-id="${dropdownId}"] [role="option"]:nth-child(${prevIndex + 1})`
+            ) as HTMLElement
+            prevOption?.focus()
+          } else {
+            triggerRef.current?.focus()
+          }
         }
       } else if (e.key === 'Escape') {
         setIsOpen(false)
@@ -107,12 +128,12 @@ export const CustomDropdown = React.forwardRef<HTMLButtonElement, CustomDropdown
             "cursor-pointer touch-manipulation",
             "transition-all duration-200 ease-in-out",
             "text-left",
-            "hover:border-primary/30",
+            "hover:border-primary/30 hover:bg-accent/50",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:border-primary/50",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            isOpen && "ring-2 ring-primary ring-offset-2 border-primary/50",
+            isOpen && "ring-2 ring-primary ring-offset-2 border-primary/50 bg-accent/50",
             !selectedOption && "text-muted-foreground",
-            selectedOption && "text-foreground",
+            selectedOption && "text-foreground font-medium",
             className
           )}
           aria-haspopup="listbox"
@@ -152,23 +173,29 @@ export const CustomDropdown = React.forwardRef<HTMLButtonElement, CustomDropdown
             >
               {options.map((option, index) => {
                 const isSelected = option.value === value
+                const isDisabled = option.disabled === true
                 return (
                   <li
                     key={option.value}
                     role="option"
                     aria-selected={isSelected}
-                    tabIndex={0}
-                    onClick={() => handleSelect(option.value)}
-                    onKeyDown={(e) => handleOptionKeyDown(e, option.value, index)}
+                    aria-disabled={isDisabled}
+                    tabIndex={isDisabled ? -1 : 0}
+                    onClick={() => !isDisabled && handleSelect(option.value)}
+                    onKeyDown={(e) => !isDisabled && handleOptionKeyDown(e, option.value, index)}
                     className={cn(
-                      "flex items-center justify-between px-3 py-2.5 sm:py-2 cursor-pointer",
+                      "flex items-center justify-between px-3 py-2.5 sm:py-2",
                       "transition-colors duration-150",
                       "touch-manipulation min-h-[44px]",
-                      "hover:bg-accent focus:bg-accent focus:outline-none",
+                      isDisabled 
+                        ? "cursor-not-allowed opacity-50" 
+                        : "cursor-pointer hover:bg-accent focus:bg-accent focus:outline-none",
                       isSelected && "bg-accent/50"
                     )}
                   >
-                    <span className="text-sm text-foreground">{option.label}</span>
+                    <span className={cn("text-sm", isDisabled ? "text-muted-foreground" : "text-foreground")}>
+                      {option.label}
+                    </span>
                     {isSelected && (
                       <Check className="h-4 w-4 text-primary flex-shrink-0" strokeWidth={2.5} />
                     )}

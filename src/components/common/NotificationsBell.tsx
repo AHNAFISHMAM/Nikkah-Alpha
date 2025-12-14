@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { cn } from '../../lib/utils'
 import { Portal } from './Portal'
 import toast from 'react-hot-toast'
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/scrollLock'
 
 /**
  * Notifications Bell Component - Mobile-First Design
@@ -119,13 +120,11 @@ export function NotificationsBell() {
     }
   }, [isOpen])
 
-  // Prevent body scroll when open on mobile
+  // Prevent body scroll when open on mobile (using centralized scroll lock)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = ''
-      }
+      lockBodyScroll()
+      return () => unlockBodyScroll()
     }
   }, [isOpen])
 

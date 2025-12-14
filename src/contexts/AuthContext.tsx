@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase, signIn, signUp, signOut } from '../lib/supabase'
 import type { Profile, ProfileUpdate } from '../types/database'
+import { logError } from '../lib/error-handler'
+import { logWarning } from '../lib/logger'
 
 interface AuthContextType {
   user: User | null
@@ -49,8 +51,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .maybeSingle()
 
       if (error) {
-        // Use logError for proper error tracking
-        // Silently return null for missing profiles (not an error)
+        // Log error for debugging, but return null (missing profile is not critical)
+        logError(error, 'AuthContext.fetchProfileData')
         return null
       }
 
@@ -61,7 +63,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       return profileData
     } catch (error) {
-      // Silently return null for unexpected errors (profile fetch is non-critical)
+      // Log error but return null (profile fetch is non-critical)
+      logError(error, 'AuthContext.fetchProfileData')
       return null
     }
   }
@@ -162,8 +165,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setProfile(profileData)
             }
           })
-          .catch(() => {
-            // Silently fail - profile fetch is non-critical
+          .catch((error) => {
+            // Log error but don't break the app (profile fetch is non-critical)
+            logError(error, 'AuthContext.initAuth')
           })
         return
       }
@@ -218,8 +222,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setProfile(profileData)
               }
             })
-            .catch(() => {
-              // Silently fail - profile fetch is non-critical
+            .catch((error) => {
+              // Log error but don't break the app (profile fetch is non-critical)
+              logError(error, 'AuthContext.initAuth')
             })
         }
       } catch (error) {
@@ -334,6 +339,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const first_name = nameParts[0] || null
       const last_name = nameParts.slice(1).join(' ') || null
 
+      // Try to insert profile, but handle case where it already exists (409 Conflict)
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -346,8 +352,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } as any)
 
       if (profileError) {
-        // Log but don't fail signup - profile can be created later
-        // Error is non-critical for initial signup
+        // If profile already exists (409 Conflict), try to update it instead
+        if (profileError.code === '23505' || profileError.message?.includes('409') || profileError.message?.includes('Conflict') || profileError.message?.includes('duplicate')) {
+          // Profile already exists, try to update it
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              email: data.user.email,
+              full_name: fullName,
+              first_name: first_name,
+              last_name: last_name,
+            })
+            .eq('id', data.user.id)
+
+          if (updateError) {
+            // Log but don't fail signup - profile can be created/updated later
+            logWarning('Profile update failed after signup', 'AuthContext')
+          }
+        } else {
+          // Other errors - log but don't fail signup
+          logWarning('Profile creation failed after signup', 'AuthContext')
+        }
       }
       
       // Set user state immediately after successful signup
@@ -433,8 +458,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const { error } = await supabase
       .from('profiles')
-      // @ts-expect-error - Supabase type inference issue with Database types
-      .update(updatePayload)
+      .update(updatePayload as any)
       .eq('id', user.id)
 
     if (error) {

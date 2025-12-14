@@ -1,3 +1,5 @@
+import { logError, logDebug } from './logger'
+
 /**
  * Image handling utilities for cache-busting, placeholders, and error handling
  */
@@ -77,7 +79,7 @@ export const FALLBACK_IMAGE = generatePlaceholder('Image', 400, 300)
 export function handleImageLoad(e: React.SyntheticEvent<HTMLImageElement, Event>) {
   const img = e.currentTarget
   img.style.opacity = '1'
-  console.log(`✅ Image loaded: ${img.src}`)
+  logDebug(`Image loaded: ${img.src}`, undefined, 'image-utils')
 }
 
 /**
@@ -92,7 +94,7 @@ export function handleImageError(
   
   // Only set fallback if not already set to prevent infinite loop
   if (!img.src.includes('data:image') && !img.src.includes('placeholder')) {
-    console.error(`❌ Image failed to load: ${originalSrc}`)
+    logError(`Image failed to load: ${originalSrc}`, undefined, 'image-utils')
     img.src = fallback
   }
 }

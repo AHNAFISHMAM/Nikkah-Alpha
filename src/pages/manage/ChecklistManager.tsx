@@ -130,16 +130,14 @@ export function ChecklistManager() {
       if (data.id) {
         const { error } = await supabase
           .from('checklist_categories')
-          // @ts-expect-error - Supabase type inference issue
-          .update(data)
+          .update(data as any)
           .eq('id', data.id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('checklist_categories')
-          // @ts-expect-error - Supabase type inference issue
-          .insert(data)
+          .insert(data as any)
 
         if (error) throw error
       }
@@ -164,16 +162,14 @@ export function ChecklistManager() {
       if (data.id) {
         const { error } = await supabase
           .from('checklist_items')
-          // @ts-expect-error - Supabase type inference issue
-          .update(data)
+          .update(data as any)
           .eq('id', data.id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('checklist_items')
-          // @ts-expect-error - Supabase type inference issue
-          .insert(data)
+          .insert(data as any)
 
         if (error) throw error
       }

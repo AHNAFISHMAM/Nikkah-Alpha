@@ -43,8 +43,7 @@ export function useUpdateProfile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        // @ts-expect-error - Supabase type inference issue with partial updates
-        .update(updates)
+        .update(updates as any)
         .eq('id', user.id)
         .select()
         .single()

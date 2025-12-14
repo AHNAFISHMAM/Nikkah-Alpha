@@ -26,14 +26,13 @@ export function CustomItemDialog({ categoryId, userId, onClose }: CustomItemDial
       // First create the checklist item
       const { data: newItem, error: itemError } = await supabase
         .from('checklist_items')
-        // @ts-expect-error - Supabase type inference issue
         .insert({
           category_id: categoryId,
           title,
           description: description || null,
           is_required: false,
           sort_order: 999, // Put custom items at the end
-        })
+        } as any)
         .select()
         .single()
 
@@ -46,12 +45,11 @@ export function CustomItemDialog({ categoryId, userId, onClose }: CustomItemDial
       // Then create the user progress entry (uncompleted)
       const { error: progressError } = await supabase
         .from('user_checklist_progress')
-        // @ts-expect-error - Supabase type inference issue
         .insert({
           user_id: userId,
           item_id: newItem.id,
           is_completed: false
-        })
+        } as any)
 
       if (progressError) throw progressError
     },

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'rea
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
+import { lockBodyScroll, unlockBodyScroll } from '../../utils/scrollLock'
 
 export interface PopoverProps {
   isOpen: boolean
@@ -204,13 +205,11 @@ export function Popover({
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
-  // Prevent body scroll when backdrop is shown (mobile)
+  // Prevent body scroll when backdrop is shown (mobile) - using centralized scroll lock
   useEffect(() => {
     if (isOpen && showBackdrop) {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = ''
-      }
+      lockBodyScroll()
+      return () => unlockBodyScroll()
     }
   }, [isOpen, showBackdrop])
 

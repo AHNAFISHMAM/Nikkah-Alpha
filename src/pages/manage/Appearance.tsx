@@ -31,13 +31,12 @@ async function updateThemeSettings(themeKey: ThemeKey): Promise<void> {
   }
   const { error } = await supabase
     .from('app_settings')
-    // @ts-expect-error - Supabase type inference issue with app_settings
     .upsert(
       {
         key: 'theme',
         value: { themeKey },
         updated_at: new Date().toISOString(),
-      },
+      } as any,
       { onConflict: 'key' }
     )
 

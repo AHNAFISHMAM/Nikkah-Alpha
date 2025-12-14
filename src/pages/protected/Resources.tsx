@@ -48,12 +48,12 @@ interface ResourceWithFavorites {
 
 // Extract constants to prevent recreation
 const CATEGORY_CONFIG: Record<string, { icon: typeof BookOpen; color: string; bgColor: string }> = {
-  Books: { icon: BookOpen, color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-primary/20' },
-  Scholarly: { icon: GraduationCap, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
-  Counseling: { icon: Users, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30' },
-  Finance: { icon: DollarSign, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
-  Duas: { icon: Heart, color: 'text-pink-600 dark:text-pink-400', bgColor: 'bg-pink-100 dark:bg-pink-900/30' },
-  Courses: { icon: FileText, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
+  Books: { icon: BookOpen, color: 'text-primary', bgColor: 'bg-primary/10 dark:bg-accent/30' },
+  Scholarly: { icon: GraduationCap, color: 'text-blue-600 dark:text-blue-300', bgColor: 'bg-blue-100 dark:bg-blue-900/20' },
+  Counseling: { icon: Users, color: 'text-purple-600 dark:text-purple-300', bgColor: 'bg-purple-100 dark:bg-purple-900/20' },
+  Finance: { icon: DollarSign, color: 'text-green-600 dark:text-green-300', bgColor: 'bg-green-100 dark:bg-green-900/20' },
+  Duas: { icon: Heart, color: 'text-pink-600 dark:text-pink-300', bgColor: 'bg-pink-100 dark:bg-pink-900/20' },
+  Courses: { icon: FileText, color: 'text-orange-600 dark:text-orange-300', bgColor: 'bg-orange-100 dark:bg-orange-900/20' },
 }
 
 const CATEGORY_ORDER = ['Books', 'Scholarly', 'Counseling', 'Finance', 'Duas', 'Courses'] as const
@@ -124,7 +124,6 @@ export function Resources() {
         .range(0, 999) // Explicit range to get all resources
 
       if (error) {
-        console.error('❌ Resources fetch error:', error)
         logError(error, 'Resources.fetchResources')
         throw error
       }
@@ -136,14 +135,6 @@ export function Resources() {
           ? r.user_resource_favorites.filter((f: any) => f.user_id === user.id)
           : [],
       })) as ResourceWithFavorites[]
-
-      // Debug logging
-      console.log('📊 Resources fetched:', {
-        count: count || data?.length || 0,
-        dataLength: data?.length || 0,
-        mappedLength: mapped.length,
-        resources: mapped.map(r => ({ id: r.id, title: r.title, category: r.category }))
-      })
       
       return mapped
     },
@@ -184,7 +175,7 @@ export function Resources() {
         if (error) {
           // If it's a duplicate (unique violation), that's okay - just ignore
           if (error.code === '23505') {
-            console.log('Favorite already exists, ignoring duplicate')
+            // Favorite already exists, ignoring duplicate
             return
           }
           throw error
@@ -238,16 +229,6 @@ export function Resources() {
   // Use safe defaults while loading
   const displayResources = resources || []
   
-  // Debug logging
-  console.log('🔍 Display resources:', {
-    total: displayResources.length,
-    byCategory: displayResources.reduce((acc, r) => {
-      acc[r.category] = (acc[r.category] || 0) + 1
-      return acc
-    }, {} as Record<string, number>),
-    resources: displayResources.map(r => ({ id: r.id, title: r.title, category: r.category }))
-  })
-  
   // Get unique categories in specified order - memoized
   const categories = useMemo(() => CATEGORY_ORDER.filter(cat => 
     displayResources.some((r) => r.category === cat)
@@ -264,58 +245,39 @@ export function Resources() {
     const isFavorite = Array.isArray(resource.user_resource_favorites) && resource.user_resource_favorites.length > 0
     const matchesFavorite = !showSavedOnly || isFavorite
 
-    const matches = matchesSearch && matchesCategory && matchesFavorite
-    
-    if (!matches) {
-      console.log('🚫 Filtered out:', {
-        title: resource.title,
-        matchesSearch,
-        matchesCategory,
-        matchesFavorite,
-        searchQuery: debouncedSearchQuery,
-        selectedCategory,
-        showSavedOnly
-      })
-    }
-
-    return matches
+    return matchesSearch && matchesCategory && matchesFavorite
   }), [displayResources, debouncedSearchQuery, selectedCategory, showSavedOnly])
 
-  console.log('🎯 Filtered resources:', {
-    total: filteredResources.length,
-    searchQuery: debouncedSearchQuery,
-    selectedCategory,
-    showSavedOnly,
-    byCategory: filteredResources.reduce((acc, r) => {
-      acc[r.category] = (acc[r.category] || 0) + 1
+  // Group and sort resources by category - memoized
+  const groupedResources = useMemo(() => {
+    const grouped = filteredResources.reduce((acc: Record<string, ResourceWithFavorites[]>, resource) => {
+      const category = resource.category || 'Other'
+      if (!acc[category]) acc[category] = []
+      acc[category].push(resource)
       return acc
-    }, {} as Record<string, number>)
-  })
+    }, {})
 
-  // Group resources by category
-  const groupedResources = filteredResources.reduce((acc: Record<string, ResourceWithFavorites[]>, resource) => {
-    const category = resource.category || 'Other'
-    if (!acc[category]) acc[category] = []
-    acc[category].push(resource)
-    return acc
-  }, {})
-
-  // Sort resources within each category
-  Object.keys(groupedResources).forEach(category => {
-    groupedResources[category].sort((a, b) => {
-      if (a.order_index !== null && b.order_index !== null) {
-        return a.order_index - b.order_index
-      }
-      if (a.order_index !== null) return -1
-      if (b.order_index !== null) return 1
-      return a.title.localeCompare(b.title)
+    // Sort resources within each category
+    Object.keys(grouped).forEach(category => {
+      grouped[category].sort((a, b) => {
+        if (a.order_index !== null && b.order_index !== null) {
+          return a.order_index - b.order_index
+        }
+        if (a.order_index !== null) return -1
+        if (b.order_index !== null) return 1
+        return a.title.localeCompare(b.title)
+      })
     })
-  })
 
-  // Count favorited resources
-  const favoriteCount = displayResources.filter((r) => 
-    Array.isArray(r.user_resource_favorites) && r.user_resource_favorites.length > 0
-  ).length
+    return grouped
+  }, [filteredResources])
+
+  // Count favorited resources - memoized
+  const favoriteCount = useMemo(() => 
+    displayResources.filter((r) => 
+      Array.isArray(r.user_resource_favorites) && r.user_resource_favorites.length > 0
+    ).length
+  , [displayResources])
 
   return (
     <>
@@ -358,7 +320,7 @@ export function Resources() {
               className="mb-6 sm:mb-8"
             >
               <Card className="overflow-hidden" padding="none">
-                <div className="bg-gradient-to-r from-primary/10 via-islamic-gold/5 to-islamic-purple/10 dark:from-primary/20 dark:via-islamic-gold/10 dark:to-islamic-purple/20 p-5 sm:p-6">
+                <div className="bg-gradient-to-r from-primary/10 via-islamic-gold/5 to-islamic-purple/10 dark:bg-card dark:border dark:border-border/50 p-5 sm:p-6">
                   <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-card dark:bg-card/50 shadow-sm flex items-center justify-center flex-shrink-0">

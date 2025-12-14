@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for user's own profile
@@ -11,20 +13,22 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimeProfile() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -37,7 +41,7 @@ export function useRealtimeProfile() {
     if (!user?.id || !supabase) return
 
     // Cleanup any existing channel
-    if (channelRef.current) {
+    if (channelRef.current && supabase) {
       try {
         supabase.removeChannel(channelRef.current)
       } catch (error) {
@@ -58,7 +62,7 @@ export function useRealtimeProfile() {
         },
         (payload) => {
           if (!isMountedRef.current) return
-          console.log('[Realtime] Profile update detected:', payload.eventType)
+          logDebug('[Realtime] Profile update detected', payload.eventType, 'useRealtimeProfile')
           debouncedInvalidate()
         }
       )
@@ -66,9 +70,9 @@ export function useRealtimeProfile() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Profile channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Profile channel subscribed for user ${user.id}`, undefined, 'useRealtimeProfile')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Profile channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Profile channel status: ${status} for user ${user.id}`, undefined, 'useRealtimeProfile')
         }
       })
 
@@ -79,7 +83,7 @@ export function useRealtimeProfile() {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
       }
-      if (channelRef.current) {
+      if (channelRef.current && supabase) {
         try {
           supabase.removeChannel(channelRef.current)
         } catch (error) {
@@ -88,6 +92,6 @@ export function useRealtimeProfile() {
         channelRef.current = null
       }
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 }
 

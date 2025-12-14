@@ -87,13 +87,13 @@ export const Dialog = memo(function Dialog({
 
     document.addEventListener('keydown', handleTabKey)
 
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden'
+    // Prevent body scroll when modal is open (using centralized scroll lock)
+    lockBodyScroll()
 
     return () => {
       clearTimeout(timer)
       document.removeEventListener('keydown', handleTabKey)
-      document.body.style.overflow = ''
+      unlockBodyScroll()
       
       // Restore focus to previous element when dialog closes
       if (previousActiveElement.current) {

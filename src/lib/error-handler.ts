@@ -58,6 +58,14 @@ const ERROR_MAP: Record<string, Omit<ErrorInfo, 'message' | 'code' | 'status'>> 
     userMessage: 'Cannot delete this item because it is being used elsewhere.',
     retryable: false,
   },
+  'Failed to load image': {
+    userMessage: 'Unable to load image. Please check your connection and try again.',
+    retryable: true,
+  },
+  'Image loading timeout': {
+    userMessage: 'Image is taking too long to load. Please check your connection and try again.',
+    retryable: true,
+  },
 }
 
 /**

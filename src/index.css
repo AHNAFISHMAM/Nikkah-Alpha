@@ -318,79 +318,237 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  /* Global rule - only border-color, no overflow/height rules that could cause double scrollbar */
+  * { 
+    border-color: var(--color-border); 
+  }
+  
+  /* ========================================
+     PHASE 1: ESTABLISH SINGLE SCROLL CONTAINER
+     Only html element scrolls - all others flow content to html
+     ======================================== */
+  
+  /* PRIMARY SCROLL CONTAINER: HTML element only */
   html {
+    /* CRITICAL: Only html scrolls - this is THE scroll container */
     overflow-x: hidden;
-    overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
+    overflow-y: auto; /* Only scrollable element */
     width: 100%;
-    height: 100%;
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: none;
-    scroll-behavior: smooth;
-    /* Mobile-first: Use dynamic viewport height for mobile browsers */
-    height: 100dvh;
-    min-height: 100vh;
-    /* Optimize scrolling performance */
-    -webkit-overflow-scrolling: touch;
-    /* Custom branded scrollbar - uses theme variables */
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--color-brand) 30%, transparent) transparent;
-    /* Create stacking context for fixed elements */
+    height: auto; /* Let content determine height - DO NOT use height: 100% */
+    scroll-behavior: smooth; /* Native smooth scrolling */
+    -webkit-overflow-scrolling: touch; /* Mobile smooth scrolling */
+  }
+  
+  /* BODY: Never scrolls - content flows to html */
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden !important;
+    overflow-y: visible !important; /* CRITICAL: Content flows to html */
+    min-height: 100vh; /* At least viewport height */
+    min-height: 100dvh; /* Dynamic viewport on mobile */
+    height: auto !important; /* Grows with content */
+    max-height: none !important;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     position: relative;
   }
-
+  
+  /* ROOT: Never scrolls - content flows to html */
+  #root {
+    overflow-x: hidden !important;
+    overflow-y: visible !important; /* CRITICAL: Content flows to html */
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto !important;
+    max-height: none !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  /* MAIN (Public Pages): Never scrolls - content flows to html */
+  main:not(html.dashboard-layout-active main) {
+    overflow-y: visible !important; /* CRITICAL: Content flows to html */
+    overflow-x: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* CRITICAL: Ensure sections and containers don't create scrollbars on public pages */
+  main:not(html.dashboard-layout-active main) section,
+  main:not(html.dashboard-layout-active main) .container {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* CRITICAL: Prevent header containers from creating scrollbars when elements scale */
+  header .container,
+  header[class*="container"] {
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+  }
+  
+  /* ========================================
+     PHASE 2: HIDE DEFAULT SCROLLBAR COMPLETELY
+     Hide default scrollbars on body, root, and all other elements
+     ======================================== */
+  
+  /* Hide scrollbars on body and root (they should never scroll) */
+  body, #root {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+  }
+  
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    display: none !important; /* WebKit browsers */
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+  
+  /* Hide scrollbar corners on body and root */
+  body::-webkit-scrollbar-corner,
+  #root::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+  }
+  
+  /* ========================================
+     PHASE 3: CUSTOM SCROLLBAR STYLING (HTML ONLY)
+     Apply custom scrollbar to html element after hiding default
+     ======================================== */
+  
+  /* Step 1: Firefox scrollbar (thin, custom color) */
+  html {
+    scrollbar-width: thin !important;
+    scrollbar-color: color-mix(in srgb, var(--color-brand) 30%, transparent) transparent;
+  }
+  
+  /* Step 2: WebKit custom scrollbar (consolidated rule) */
+  /* CRITICAL: Hide default appearance FIRST, then show custom */
   html::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: block !important; /* Show custom scrollbar */
+    width: 8px !important; /* Desktop width */
+    height: 8px !important;
+    background: transparent !important;
+    /* Ensure default scrollbar buttons are hidden */
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
   }
-
+  
+  /* CRITICAL: Ensure only ONE scrollbar shows - hide any duplicate scrollbars */
+  html::-webkit-scrollbar:vertical {
+    width: 8px !important;
+  }
+  
+  html::-webkit-scrollbar:horizontal {
+    height: 0 !important;
+    display: none !important;
+  }
+  
   html::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
     border-radius: 10px;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
   }
-
+  
   html::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 30%, transparent), color-mix(in srgb, var(--color-brand-accent) 30%, transparent));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 30%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 30%, transparent)
+    );
     border-radius: 10px;
     border: 2px solid transparent;
     background-clip: padding-box;
-    transition: background 0.2s ease;
+    transition: background-color 0.2s ease; /* Only animate color, not scroll */
+    pointer-events: auto; /* Ensure scrollbar is interactive */
   }
-
+  
   html::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 50%, transparent), color-mix(in srgb, var(--color-brand-accent) 50%, transparent));
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 50%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 50%, transparent)
+    );
   }
-
+  
   html::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 70%, transparent), color-mix(in srgb, var(--color-brand-accent) 70%, transparent));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 70%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 70%, transparent)
+    );
+  }
+  
+  /* Hide scrollbar corner */
+  html::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+  }
+  
+  /* Hide scrollbar buttons (arrows) */
+  html::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
   }
   
   /* Dark mode scrollbar */
-  .dark {
+  .dark html {
     scrollbar-color: color-mix(in srgb, var(--color-brand) 40%, transparent) transparent;
   }
   
   .dark html::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 40%, transparent), color-mix(in srgb, var(--color-brand-accent) 40%, transparent));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 40%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 40%, transparent)
+    );
   }
   
   .dark html::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 60%, transparent), color-mix(in srgb, var(--color-brand-accent) 60%, transparent));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 60%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 60%, transparent)
+    );
   }
   
   .dark html::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand) 80%, transparent), color-mix(in srgb, var(--color-brand-accent) 80%, transparent));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand) 80%, transparent),
+      color-mix(in srgb, var(--color-brand-accent) 80%, transparent)
+    );
   }
-
-  /* Mobile: thinner scrollbar */
+  
+  /* Mobile: Thinner scrollbar */
   @media (max-width: 768px) {
     html::-webkit-scrollbar {
-      width: 4px;
+      width: 4px; /* Thinner on mobile */
     }
   }
+  
+  /* CRITICAL: Prevent double scrollbar - ensure main elements don't scroll on public pages */
+  /* Public pages: main should NOT scroll (html handles all scrolling) */
+  /* Dashboard pages: main WILL scroll (handled by .dashboard-layout-active rule below) */
   
   /* Hide HTML scrollbar when dashboard layout is active */
   html.dashboard-layout-active {
@@ -403,7 +561,7 @@
     overflow: hidden !important;
   }
   
-  /* Ensure main content scrollbar is visible and styled */
+  /* Dashboard pages: main content scrollbar is visible and styled */
   html.dashboard-layout-active main {
     /* Main scrollbar styling is already handled by scrollbar-thin class */
     overflow-y: auto !important;
@@ -427,49 +585,6 @@
     }
   }
   
-  /* Smooth transition when toggling */
-  html {
-    transition: overflow-y 0.2s ease;
-  }
-  
-  body { 
-    background-color: var(--color-background); 
-    color: var(--color-foreground); 
-    font-feature-settings: "rlig" 1, "calt" 1; 
-    -webkit-font-smoothing: antialiased; 
-    -moz-osx-font-smoothing: grayscale; 
-    overflow-x: hidden; 
-    overflow-y: visible; /* Let html handle scrolling, body is just a container */
-    /* Mobile-first: Use dynamic viewport height */
-    min-height: 100vh;
-    min-height: 100dvh;
-    overscroll-behavior-y: none; 
-    margin: 0; 
-    padding: 0;
-    width: 100%;
-    /* Prevent text size adjustment on iOS */
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    /* Touch optimization */
-    touch-action: pan-y;
-    /* Smooth scrolling */
-    -webkit-overflow-scrolling: touch;
-    /* Create stacking context */
-    position: relative;
-  }
-  #root { 
-    /* Mobile-first: Use dynamic viewport height */
-    min-height: 100vh;
-    min-height: 100dvh;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    overflow-y: visible; /* Let html handle scrolling, root is just a container */
-    /* Create stacking context for fixed elements */
-    position: relative;
-    isolation: isolate; /* Create new stacking context */
-  }
   /* Mobile-first: Base font size for mobile (prevents zoom on input focus) */
   input, select, textarea { 
     font-size: 16px; 
@@ -550,28 +665,38 @@
     }
   }
   
+  /* FIX: Prevent horizontal overflow on ALL screen sizes */
+  /* Override 100vw width for fixed background elements */
+  main [class*="fixed"][class*="-z-10"],
+  main [class*="fixed"][class*="-z-[9]"] {
+    /* Use inset-0 approach instead of 100vw to avoid scrollbar width */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* FIX: Make containers full width on ALL screen sizes */
+  /* Ensure containers extend to viewport edges with padding */
+  main .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
   /* Mobile-specific optimizations */
   @media (max-width: 639px) {
-    /* Ensure full width on mobile */
-    * {
+    /* Ensure full width on mobile - but exclude html, body, root to prevent scrollbar issues */
+    *:not(html):not(body):not(#root) {
       max-width: 100%;
     }
     /* Optimize scrolling on mobile */
     body {
       -webkit-overflow-scrolling: touch;
-    }
-    
-    /* FIX: Prevent horizontal overflow on mobile */
-    /* Override 100vw width for fixed background elements */
-    main [class*="fixed"][class*="-z-10"],
-    main [class*="fixed"][class*="-z-[9]"] {
-      /* Use inset-0 approach instead of 100vw to avoid scrollbar width */
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: auto !important;
-      height: auto !important;
     }
     
     /* Change background-attachment from fixed to scroll on mobile */
@@ -580,9 +705,10 @@
       background-attachment: scroll !important;
     }
     
-    /* Ensure main container doesn't overflow */
+    /* Ensure main container doesn't overflow - but don't create scrollbar */
     main {
       overflow-x: hidden !important;
+      overflow-y: visible !important; /* Let html handle scrolling */
     }
     
     /* FIX: Align containers and cards properly with viewport on mobile */

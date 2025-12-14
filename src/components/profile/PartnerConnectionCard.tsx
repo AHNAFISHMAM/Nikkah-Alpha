@@ -28,6 +28,7 @@ import { useEnhancedRealtimePartnerInvitations } from '../../hooks/useEnhancedRe
 import { ConflictResolutionBanner, Conflict } from './ConflictResolutionBanner'
 import { formatDistanceToNow } from 'date-fns'
 import { toastWithPreferences } from '../../lib/toast'
+import { logError } from '../../lib/error-handler'
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -224,7 +225,7 @@ export function PartnerConnectionCard() {
                           await navigator.clipboard.writeText(partnerProfile.email || '')
                           toastWithPreferences.copy('Email copied!')
                         } catch (error) {
-                          console.error('Failed to copy email:', error)
+                          logError('Failed to copy email', error, 'PartnerConnectionCard')
                           toastWithPreferences.error('Failed to copy email')
                         }
                       }}
@@ -380,7 +381,7 @@ export function PartnerConnectionCard() {
                             await navigator.clipboard.writeText(pendingSentInvitation.invitation_code || '')
                             toastWithPreferences.copy('Code copied!')
                           } catch (error) {
-                            console.error('Failed to copy code:', error)
+                            logError('Failed to copy code', error, 'PartnerConnectionCard')
                             toastWithPreferences.error('Failed to copy code')
                           }
                         }}
@@ -592,7 +593,7 @@ export function PartnerConnectionCard() {
                             await navigator.clipboard.writeText(codeToCopy)
                             toastWithPreferences.copy('Code copied!')
                           } catch (error) {
-                            console.error('Failed to copy code:', error)
+                            logError('Failed to copy code', error, 'PartnerConnectionCard')
                             toastWithPreferences.error('Failed to copy code')
                           }
                         }}

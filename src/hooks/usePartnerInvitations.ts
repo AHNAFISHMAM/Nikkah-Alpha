@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { logError } from '../lib/error-handler'
 import { toastWithPreferences } from '../lib/toast'
 import { useMutationDeduplication } from '../utils/mutationDeduplication'
+import { logWarning, logDebug } from '../lib/logger'
 
 export interface PartnerInvitation {
   id: string
@@ -172,7 +173,7 @@ export function useSendEmailInvitation() {
         })
       } catch (auditError) {
         // Non-critical, log but don't fail
-        console.warn('Failed to create audit log:', auditError)
+        logWarning('Failed to create audit log', 'usePartnerInvitations')
       }
 
       return data as PartnerInvitation
@@ -291,7 +292,7 @@ export function useGenerateInvitationCode() {
         })
       } catch (auditError) {
         // Non-critical, log but don't fail
-        console.warn('Failed to create audit log:', auditError)
+        logWarning('Failed to create audit log', 'usePartnerInvitations')
       }
 
       return data as PartnerInvitation
@@ -361,7 +362,7 @@ export function useAcceptInvitation() {
             })
           } catch (recordError) {
             // Non-critical, log but don't fail
-            console.warn('Failed to record failed attempt:', recordError)
+            logWarning('Failed to record failed attempt', 'usePartnerInvitations')
           }
           throw new Error('Invalid or expired invitation code')
         }
@@ -389,7 +390,7 @@ export function useAcceptInvitation() {
             })
           } catch (recordError) {
             // Non-critical
-            console.warn('Failed to record failed attempt:', recordError)
+            logWarning('Failed to record failed attempt', 'usePartnerInvitations')
           }
         }
         throw error
@@ -415,12 +416,12 @@ export function useAcceptInvitation() {
       const acceptKey = context?.invitationId || context?.invitationCode || 'unknown'
       clear('accept', acceptKey)
       
-      console.log('[useAcceptInvitation] Success! Partner ID:', partnerId)
+      logDebug('[useAcceptInvitation] Success! Partner ID', partnerId, 'usePartnerInvitations')
       
       // Optimistically set partner ID for immediate UI update
       if (partnerId) {
         queryClient.setQueryData(['partner', user?.id], partnerId)
-        console.log('[useAcceptInvitation] Set partner ID in cache:', partnerId)
+        logDebug('[useAcceptInvitation] Set partner ID in cache', partnerId, 'usePartnerInvitations')
       }
       
       // Invalidate and refetch all related queries with correct keys
@@ -454,7 +455,7 @@ export function useAcceptInvitation() {
         }),
       ])
       
-      console.log('[useAcceptInvitation] Queries invalidated and refetched')
+      logDebug('[useAcceptInvitation] Queries invalidated and refetched', undefined, 'usePartnerInvitations')
       
       toastWithPreferences.milestone('🎉 Partner connected successfully!')
     },
@@ -518,7 +519,7 @@ export function useCancelInvitation() {
         })
       } catch (auditError) {
         // Non-critical, log but don't fail
-        console.warn('Failed to create audit log:', auditError)
+        logWarning('Failed to create audit log', 'usePartnerInvitations')
       }
     },
     onSuccess: async (_, invitationId) => {

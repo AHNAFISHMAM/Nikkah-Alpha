@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for module progress
@@ -11,23 +13,24 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimeModuleProgress() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['modules'] })
-      queryClient.invalidateQueries({ queryKey: ['user-module-progress'] })
-      queryClient.invalidateQueries({ queryKey: ['module'] }) // Invalidates all module queries including ['module', moduleId]
-      queryClient.invalidateQueries({ queryKey: ['module-notes'] }) // Invalidates all module-notes queries including ['module-notes', moduleId, user?.id]
-      queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['modules'] })
+        queryClient.invalidateQueries({ queryKey: ['user-module-progress'] })
+        queryClient.invalidateQueries({ queryKey: ['module'] }) // Invalidates all module queries including ['module', moduleId]
+        queryClient.invalidateQueries({ queryKey: ['module-notes'] }) // Invalidates all module-notes queries including ['module-notes', moduleId, user?.id]
+        queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -39,7 +42,7 @@ export function useRealtimeModuleProgress() {
   useEffect(() => {
     if (!user?.id || !supabase) return
 
-    const channelsRef: ReturnType<typeof supabase.channel>[] = []
+    const channelsRef: RealtimeChannel[] = []
 
     // Channel 1: user_module_progress (lesson completions)
     const progressChannel = supabase
@@ -54,7 +57,7 @@ export function useRealtimeModuleProgress() {
         },
         (payload) => {
           if (!isMountedRef.current) return
-          console.log('[Realtime] Module progress change detected:', payload.eventType)
+          logDebug('[Realtime] Module progress change detected', payload.eventType, 'useRealtimeModuleProgress')
           debouncedInvalidate()
         }
       )
@@ -62,9 +65,9 @@ export function useRealtimeModuleProgress() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Module progress channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Module progress channel subscribed for user ${user.id}`, undefined, 'useRealtimeModuleProgress')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Module progress channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Module progress channel status: ${status} for user ${user.id}`, undefined, 'useRealtimeModuleProgress')
         }
       })
 
@@ -81,7 +84,7 @@ export function useRealtimeModuleProgress() {
         },
         (payload) => {
           if (!isMountedRef.current) return
-          console.log('[Realtime] Module notes change detected:', payload.eventType)
+          logDebug('[Realtime] Module notes change detected', payload.eventType, 'useRealtimeModuleProgress')
           debouncedInvalidate()
         }
       )
@@ -89,9 +92,9 @@ export function useRealtimeModuleProgress() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Module notes channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Module notes channel subscribed for user ${user.id}`, undefined, 'useRealtimeModuleProgress')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Module notes channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Module notes channel status: ${status} for user ${user.id}`, undefined, 'useRealtimeModuleProgress')
         }
       })
 
@@ -110,6 +113,6 @@ export function useRealtimeModuleProgress() {
         }
       })
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 }
 

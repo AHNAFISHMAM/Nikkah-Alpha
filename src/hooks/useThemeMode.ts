@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useProfile, useUpdateProfile } from './useProfile'
 import { useDebounce } from './useDebounce'
 import toast from 'react-hot-toast'
+import { logError, logWarning } from '../lib/logger'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
@@ -159,7 +160,7 @@ export function useThemeMode() {
           const trimmedLog = errorLog.slice(-10)
           localStorage.setItem('theme-mode-errors', JSON.stringify(trimmedLog))
         } catch (storageError) {
-          console.warn('Could not save error log to localStorage:', storageError)
+          logWarning('Could not save error log to localStorage', 'useThemeMode')
         }
         
         // Theme is still updated in localStorage, so user preference is preserved
@@ -244,7 +245,7 @@ export function useThemeMode() {
   const setThemeMode = useCallback(
     (mode: ThemeMode) => {
       if (!['light', 'dark', 'system'].includes(mode)) {
-        console.error(`Invalid theme mode: ${mode}`)
+        logError(`Invalid theme mode: ${mode}`, undefined, 'useThemeMode')
         return
       }
 

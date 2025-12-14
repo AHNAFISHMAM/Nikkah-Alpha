@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logDebug } from '../lib/logger'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 /**
  * Hook to subscribe to real-time updates for checklist progress
@@ -11,21 +13,23 @@ import { useAuth } from '../contexts/AuthContext'
 export function useRealtimeChecklist() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
 
   // Debounced invalidation to prevent rapid updates
-  const debouncedInvalidate = () => {
+  const debouncedInvalidate = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
     debounceTimerRef.current = setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['checklist', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
-      queryClient.invalidateQueries({ queryKey: ['pending-tasks', user?.id] })
+      if (isMountedRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['checklist', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['progress-stats', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['pending-tasks', user?.id] })
+      }
     }, 300) // 300ms debounce
-  }
+  }, [queryClient, user?.id])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -59,7 +63,7 @@ export function useRealtimeChecklist() {
         },
         (payload) => {
           if (!isMountedRef.current) return
-          console.log('[Realtime] Checklist progress change detected:', payload.eventType)
+          logDebug('[Realtime] Checklist progress change detected', payload.eventType, 'useRealtimeChecklist')
           debouncedInvalidate()
         }
       )
@@ -67,9 +71,9 @@ export function useRealtimeChecklist() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Checklist channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Checklist channel subscribed for user ${user.id}`, undefined, 'useRealtimeChecklist')
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.debug(`[Realtime] Checklist channel status: ${status} for user ${user.id}`)
+          logDebug(`[Realtime] Checklist channel status: ${status} for user ${user.id}`, undefined, 'useRealtimeChecklist')
         }
       })
 
@@ -89,6 +93,6 @@ export function useRealtimeChecklist() {
         channelRef.current = null
       }
     }
-  }, [user?.id, queryClient])
+  }, [user?.id, queryClient, debouncedInvalidate])
 }
 

@@ -30,6 +30,7 @@ import { ChecklistItemNotesModal } from '../../components/checklist/ChecklistIte
 import { PrintableChecklist } from '../../components/checklist/PrintableChecklist'
 import { useRealtimeChecklist } from '../../hooks/useRealtimeChecklist'
 import confetti from 'canvas-confetti'
+import { SkeletonCard, SkeletonList } from '../../components/common/Skeleton'
 
 interface CategoryWithItems extends ChecklistCategory {
   checklist_items: (ChecklistItem & {
@@ -153,7 +154,6 @@ export function Checklist() {
       } else {
         const { error } = await supabase
           .from('user_checklist_progress')
-          // @ts-ignore - Supabase type inference issue with upsert
           .upsert({
             user_id: user.id,
             item_id: itemId,
@@ -161,7 +161,7 @@ export function Checklist() {
             completed_at: new Date().toISOString(),
             notes: existing?.notes || null,
             discuss_with_partner: existing?.discuss_with_partner || false,
-          }, {
+          } as any, {
             onConflict: 'user_id,item_id',
           })
 
@@ -206,7 +206,6 @@ export function Checklist() {
 
       const { error } = await supabase
         .from('user_checklist_progress')
-        // @ts-ignore - Supabase type inference issue with upsert
         .upsert({
           user_id: user.id,
           item_id: itemId,
@@ -214,7 +213,7 @@ export function Checklist() {
           is_completed: existing?.is_completed || false,
           notes: existing?.notes || null,
           completed_at: existing?.completed_at || null,
-        }, {
+        } as any, {
           onConflict: 'user_id,item_id',
         })
 
@@ -404,14 +403,15 @@ export function Checklist() {
               animate="visible"
               variants={CONTAINER_VARIANTS}
               className="space-y-4 sm:space-y-6 mt-6 sm:mt-8"
+              style={{ willChange: 'transform, opacity' }}
             >
             {isLoading && !categories ? (
-              <Card>
-                <CardContent className="py-16 sm:py-20 text-center">
-                  <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-islamic-gold mx-auto mb-4 sm:mb-5" />
-                  <p className="text-muted-foreground text-sm sm:text-base">Loading your checklist...</p>
-                </CardContent>
-              </Card>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Progress Card Skeleton */}
+                <SkeletonCard />
+                {/* Categories Skeleton */}
+                <SkeletonList count={4} />
+              </div>
             ) : displayCategories.length > 0 ? (
             displayCategories.map((category) => {
               const isExpanded = expandedCategories.has(category.id)
@@ -426,7 +426,11 @@ export function Checklist() {
                 : 0
 
               return (
-                <motion.div key={category.id} variants={ITEM_VARIANTS}>
+                <motion.div 
+                  key={category.id} 
+                  variants={ITEM_VARIANTS}
+                  style={{ willChange: 'transform, opacity' }}
+                >
                   <Card padding="none" className="overflow-hidden">
                     <button
                       onClick={() => toggleCategory(category.id)}

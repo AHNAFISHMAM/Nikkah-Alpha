@@ -5,6 +5,7 @@
  */
 
 import toast from 'react-hot-toast'
+import { logError } from './error-handler'
 
 export function exportToCSV(
   data: Record<string, string | number>[],
@@ -90,7 +91,7 @@ export function exportToCSV(
       },
     })
   } catch (error) {
-    console.error('CSV export failed:', error)
+    logError('CSV export failed', error, 'csv-export')
     toast.error('Export failed. Please try again.', {
       id: toastId,
       duration: 4000,

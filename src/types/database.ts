@@ -326,6 +326,143 @@ export interface Database {
           created_at?: string
         }
       }
+      user_discussion_answers: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          answer: string | null
+          is_discussed: boolean
+          follow_up_notes: string | null
+          discussed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          answer?: string | null
+          is_discussed?: boolean
+          follow_up_notes?: string | null
+          discussed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_id?: string
+          answer?: string | null
+          is_discussed?: boolean
+          follow_up_notes?: string | null
+          discussed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      couples: {
+        Row: {
+          id: string
+          user1_id: string
+          user2_id: string
+          relationship_status: 'engaged' | 'married' | 'preparing'
+          connected_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user1_id: string
+          user2_id: string
+          relationship_status?: 'engaged' | 'married' | 'preparing'
+          connected_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user1_id?: string
+          user2_id?: string
+          relationship_status?: 'engaged' | 'married' | 'preparing'
+          connected_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      partner_invitations: {
+        Row: {
+          id: string
+          inviter_id: string
+          invitee_email: string | null
+          invitation_code: string | null
+          status: 'pending' | 'accepted' | 'declined' | 'expired'
+          invitation_type: 'email' | 'code'
+          expires_at: string
+          accepted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          inviter_id: string
+          invitee_email?: string | null
+          invitation_code?: string | null
+          status?: 'pending' | 'accepted' | 'declined' | 'expired'
+          invitation_type: 'email' | 'code'
+          expires_at?: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          inviter_id?: string
+          invitee_email?: string | null
+          invitation_code?: string | null
+          status?: 'pending' | 'accepted' | 'declined' | 'expired'
+          invitation_type?: 'email' | 'code'
+          expires_at?: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          related_entity_type: string | null
+          related_entity_id: string | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+      }
       user_discussion_notes: {
         Row: {
           id: string

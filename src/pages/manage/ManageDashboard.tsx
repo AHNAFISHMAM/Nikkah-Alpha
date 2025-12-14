@@ -15,6 +15,7 @@ import { supabase } from '../../lib/supabase'
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
+import { logError } from '../../lib/error-handler'
 
 const manageSections = [
   {
@@ -97,7 +98,7 @@ export function ManageDashboard() {
           users: usersResult.count || 0,
         }
       } catch (error) {
-        console.error('Error fetching management stats:', error)
+        logError('Error fetching management stats', error, 'ManageDashboard')
         // Return default values on error
         return {
           checklistCategories: 0,
