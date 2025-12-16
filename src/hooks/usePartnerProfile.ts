@@ -24,17 +24,15 @@ export function usePartnerProfile() {
         .maybeSingle()
 
       if (error) {
-        console.error('[usePartnerProfile] Error fetching partner profile:', error)
-        logError(error, 'usePartnerProfile')
+        logError('Error fetching partner profile', error, 'usePartnerProfile')
         return null
       }
 
       if (!data) {
-        console.warn('[usePartnerProfile] No partner profile found for partnerId:', partnerId)
+        logWarning(`No partner profile found for partnerId: ${partnerId}`, 'usePartnerProfile')
         return null
       }
 
-      console.log('[usePartnerProfile] Partner profile fetched:', { email: data.email, id: data.id })
       return data as Profile | null
     },
     enabled: !!partnerId && !partnerLoading,

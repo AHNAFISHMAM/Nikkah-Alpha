@@ -368,7 +368,7 @@ export function Home(): JSX.Element {
           opacity: 1,
           y: 0,
           transition: {
-            duration: 0.6,
+            duration: 0.4,
             ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },
@@ -378,7 +378,7 @@ export function Home(): JSX.Element {
         visible: {
           opacity: 1,
           transition: {
-            duration: 0.5,
+            duration: 0.3,
             ease: "easeOut" as const,
           },
         },
@@ -389,7 +389,7 @@ export function Home(): JSX.Element {
           opacity: 1,
           x: 0,
           transition: {
-            duration: 0.6,
+            duration: 0.4,
             ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },
@@ -400,7 +400,7 @@ export function Home(): JSX.Element {
           opacity: 1,
           x: 0,
           transition: {
-            duration: 0.6,
+            duration: 0.4,
             ease: [0.6, -0.05, 0.01, 0.99] as const,
           },
         },

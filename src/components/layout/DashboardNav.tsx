@@ -194,7 +194,7 @@ function DashboardNavComponent() {
         </Link>
 
         {/* Nav Links */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto" aria-label="Main navigation">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto min-h-0" aria-label="Main navigation">
           {navItems.map((item) => {
             if (!item || !item.path) return null
             const isActive = isPathActive(item.path)

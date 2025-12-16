@@ -7,8 +7,8 @@ export interface Conflict {
   id: string
   type: 'version_mismatch' | 'already_processed' | 'state_conflict'
   message: string
-  serverState?: any
-  localState?: any
+  serverState?: Record<string, unknown>
+  localState?: Record<string, unknown>
 }
 
 interface ConflictResolutionBannerProps {

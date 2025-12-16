@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { logError } from '../lib/error-handler'
+import { logWarning } from '../lib/logger'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
@@ -22,9 +23,9 @@ export function useDeleteUserData() {
       if (!supabase) throw new Error('Supabase is not configured')
 
       // Call RPC function to delete/anonymize data
-      const { data, error } = await supabase.rpc('delete_user_data', {
+      const { data, error } = await (supabase.rpc as any)('delete_user_data', {
         p_user_id: user.id,
-      })
+      }) as { data: { success: boolean; error?: string } | null; error: Error | null }
 
       if (error) {
         logError(error, 'useDeleteUserData')
@@ -33,6 +34,38 @@ export function useDeleteUserData() {
 
       if (!data?.success) {
         throw new Error(data?.error || 'Failed to delete user data')
+      }
+
+      // PERMANENT FIX: Always try to delete from auth.users via Edge Function
+      // This ensures emails can be reused even if database function fails
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      if (supabaseUrl) {
+        try {
+          const response = await fetch(`${supabaseUrl}/functions/v1/delete-auth-user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ userId: user.id }),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            // If database deletion already succeeded, this is just a backup
+            if (!data.auth_deleted) {
+              logError('Failed to delete auth user via Edge Function (email may not be reusable)', errorData, 'useDeleteUserData')
+            }
+          }
+        } catch (err) {
+          // If database deletion already succeeded, this is just a backup
+          if (!data.auth_deleted) {
+            logError('Edge function not available, auth user may still exist', err, 'useDeleteUserData')
+          }
+        }
+      } else if (!data.auth_deleted) {
+        // If no Supabase URL and database deletion failed, warn user
+        logError('Could not delete auth user. Email may not be reusable.', null, 'useDeleteUserData')
       }
 
       // Sign out user after data deletion

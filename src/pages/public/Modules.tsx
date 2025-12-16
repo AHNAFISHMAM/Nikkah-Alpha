@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useScrollToSection } from '../../hooks/useScrollToSection'
@@ -16,7 +17,7 @@ interface Module {
   id: string
   title: string
   description: string
-  order_index: number
+  sort_order: number
 }
 
 interface ModuleNote {
@@ -24,7 +25,7 @@ interface ModuleNote {
   is_completed: boolean
 }
 
-export default function ModulesPage() {
+function ModulesPageComponent() {
   const { user, isLoading: authLoading } = useAuth()
   
   // Auto-scroll to section when hash is present in URL
@@ -52,16 +53,16 @@ export default function ModulesPage() {
 
         if (notesError) {
           // Log error but don't fail - notes are optional
-          console.warn('Failed to fetch module notes:', notesError)
+          logWarning('Failed to fetch module notes', 'Modules')
         } else {
           notes = notesData || []
         }
       }
 
-      // Sort modules client-side by order_index (PostgREST schema cache issue)
+      // Sort modules client-side by sort_order (PostgREST schema cache issue)
       const sortedModules = (modules as any[])?.sort((a, b) => {
-        const aIndex = a?.order_index ?? 999
-        const bIndex = b?.order_index ?? 999
+        const aIndex = a?.sort_order ?? 999
+        const bIndex = b?.sort_order ?? 999
         return aIndex - bIndex
       }) || []
 
@@ -315,3 +316,5 @@ function ModulesSkeleton() {
     </div>
   )
 }
+
+export default memo(ModulesPageComponent)

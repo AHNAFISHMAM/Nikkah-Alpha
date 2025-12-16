@@ -20,6 +20,7 @@ import {
   eachDayOfInterval,
   getYear,
   getMonth,
+  getDate,
   setMonth,
   setYear,
 } from "date-fns"
@@ -80,10 +81,17 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
     const helperId = helperText ? `${datePickerId}-helper` : undefined
 
     // Parse value to Date object (timezone-safe)
+    // Convert UTC date to local date at midnight to match calendar display
     const selectedDate = React.useMemo(() => {
       if (!value) return null
       const date = parseDateSafe(value)
-      return date && isValid(date) ? date : null
+      if (!date || !isValid(date)) return null
+      // Extract the date components from the UTC date and create a local date
+      // This ensures the calendar shows the correct day regardless of timezone
+      const year = date.getUTCFullYear()
+      const month = date.getUTCMonth()
+      const day = date.getUTCDate()
+      return new Date(year, month, day)
     }, [value])
 
     // Parse min/max dates (timezone-safe)
@@ -129,15 +137,30 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
       }
     }, [openToDate, minDate, maxDate])
 
-    // Format date for input display
+    // Format date for input display (use UTC to avoid timezone shifts)
     const displayValue = React.useMemo(() => {
-      if (!selectedDate) return ""
-      return format(selectedDate, "MM/dd/yyyy")
-    }, [selectedDate])
+      if (!selectedDate || !value) return ""
+      // Parse the value string directly to avoid timezone conversion issues
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        const [year, month, day] = value.split('-').map(Number)
+        return `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}/${year}`
+      }
+      // Fallback to formatting the date using UTC methods
+      const year = selectedDate.getUTCFullYear()
+      const month = selectedDate.getUTCMonth() + 1
+      const day = selectedDate.getUTCDate()
+      return `${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}/${year}`
+    }, [selectedDate, value])
 
     // Handle date selection
     const handleDateChange = React.useCallback((date: Date) => {
-      const formattedDate = format(date, "yyyy-MM-dd")
+      // Format date using local date components to avoid timezone shifts
+      // This matches how parseDateSafe parses dates (as UTC but preserving the day)
+      const year = getYear(date)
+      const month = getMonth(date) + 1 // getMonth returns 0-11
+      const day = getDate(date)
+      const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      
       const syntheticEvent = {
         target: { value: formattedDate },
         currentTarget: { value: formattedDate },
@@ -159,12 +182,13 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
 
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputValue)) {
         const [month, day, year] = inputValue.split("/").map(Number)
-        const parsedDate = new Date(Date.UTC(year, month - 1, day))
+        // Format directly from input values to avoid timezone shifts
+        const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const parsedDate = parseDateSafe(formattedDate)
         
-        if (isValid(parsedDate)) {
+        if (parsedDate && isValid(parsedDate)) {
           const dateStart = startOfDay(parsedDate)
           if ((!minDate || dateStart >= startOfDay(minDate)) && (!maxDate || dateStart <= startOfDay(maxDate))) {
-            const formattedDate = format(parsedDate, "yyyy-MM-dd")
             e.target.value = formattedDate
             onChange?.(e)
             onDateChange?.(formattedDate)
@@ -484,7 +508,7 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
             <CalendarContent />
           </div>
         </motion.div>

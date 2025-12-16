@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Save, Edit2, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../../lib/supabase'
+import type { Database } from '../../types/database'
 import { Button } from '../ui/Button'
 import { Textarea } from '../ui/Textarea'
 import { PartnerAnswerCard } from './PartnerAnswerCard'
@@ -27,15 +28,12 @@ export function NotesEditor({ promptId, userId, initialAnswer, initialNotes, ans
     mutationFn: async ({ answer, notes }: { answer: string; notes: string }) => {
       if (!supabase) throw new Error('Supabase is not configured')
       
-      const upsertData: any = {
+      const upsertData: Database['public']['Tables']['user_discussion_answers']['Insert'] & { id?: string } = {
         user_id: userId,
         prompt_id: promptId,
         answer: answer.trim() || null,
         follow_up_notes: notes.trim() || null,
-      }
-      
-      if (answerId) {
-        upsertData.id = answerId
+        ...(answerId && { id: answerId }),
       }
 
       const { error } = await supabase

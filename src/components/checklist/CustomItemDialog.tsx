@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../../lib/supabase'
+import type { Database } from '../../types/database'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { cn } from '../../lib/utils'
@@ -32,7 +33,7 @@ export function CustomItemDialog({ categoryId, userId, onClose }: CustomItemDial
           description: description || null,
           is_required: false,
           sort_order: 999, // Put custom items at the end
-        } as any)
+        } as Database['public']['Tables']['checklist_items']['Insert'])
         .select()
         .single()
 
@@ -49,7 +50,7 @@ export function CustomItemDialog({ categoryId, userId, onClose }: CustomItemDial
           user_id: userId,
           item_id: newItem.id,
           is_completed: false
-        } as any)
+        } as Database['public']['Tables']['checklist_items']['Insert'])
 
       if (progressError) throw progressError
     },

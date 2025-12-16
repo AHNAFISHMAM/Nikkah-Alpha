@@ -181,8 +181,17 @@ export function Signup() {
   const getErrorMessage = (error: Error): string => {
     const message = error.message.toLowerCase()
     
-    if (message.includes('user already registered') || message.includes('already registered')) {
-      return 'This email is already registered. Please sign in instead.'
+    // Log the actual error for debugging
+    logError('Signup error', error, 'Signup')
+    
+    if (message.includes('user already registered') || 
+        message.includes('already registered') ||
+        message.includes('already exists') ||
+        message.includes('email already registered')) {
+      return error.message // Use the specific error message from signUp function
+    }
+    if (message.includes('previously used and deleted')) {
+      return error.message // Use the specific error message
     }
     if (message.includes('invalid email')) {
       return 'Please enter a valid email address'
@@ -190,14 +199,24 @@ export function Signup() {
     if (message.includes('password') && message.includes('weak')) {
       return 'Password is too weak. Please use a stronger password.'
     }
-    if (message.includes('network') || message.includes('fetch')) {
+    if (message.includes('password') && (message.includes('short') || message.includes('length'))) {
+      return 'Password must be at least 8 characters long.'
+    }
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
       return 'Network error. Please check your connection and try again.'
     }
     if (message.includes('not configured')) {
       return 'Authentication service is not configured. Please contact support.'
     }
+    if (message.includes('email is required')) {
+      return 'Email address is required.'
+    }
+    if (message.includes('password is required')) {
+      return 'Password is required.'
+    }
     
-    return 'Unable to create account. Please try again.'
+    // Return the actual error message if available, otherwise generic message
+    return error.message || 'Unable to create account. Please try again.'
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -224,6 +243,8 @@ export function Signup() {
       const { error } = await register(email, password, emailPrefix)
 
       if (error) {
+        // Log the error for debugging
+        logError('Register error', error, 'Signup')
         const errorMsg = getErrorMessage(error)
         setErrorMessage(errorMsg)
         setIsLoading(false)
@@ -362,7 +383,7 @@ export function Signup() {
           </div>
 
           {/* Scrollable form content */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6 safe-area-inset-bottom scroll-smooth scrollbar-thin">
+          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6 safe-area-inset-bottom scroll-smooth scrollbar-thin min-h-0">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

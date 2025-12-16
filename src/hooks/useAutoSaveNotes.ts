@@ -188,7 +188,7 @@ export function useAutoSaveNotes({
         })
       }, 3000)
     } catch (error) {
-      console.error('Retry save failed:', error)
+      logError('Retry save failed', error, 'useAutoSaveNotes')
       setSaveStatus('error')
       
       // Show error toast again

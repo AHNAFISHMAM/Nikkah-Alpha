@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, memo } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -71,7 +71,7 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 } as const
 
-export function Resources() {
+function ResourcesComponent() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
@@ -84,6 +84,27 @@ export function Resources() {
 
   // Real-time updates for favorites
   useRealtimeFavorites()
+  
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+  }, [])
+  
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('')
+  }, [])
+  
+  const handleCategoryChange = useCallback((category: string | null) => {
+    setSelectedCategory(category)
+  }, [])
+  
+  const handleToggleSavedOnly = useCallback(() => {
+    setShowSavedOnly(prev => !prev)
+  }, [])
+  
+  const handleToggleFilter = useCallback(() => {
+    setIsFilterOpen(prev => !prev)
+  }, [])
   
   // Auto-scroll to section when hash is present in URL
   useScrollToSection()
@@ -355,14 +376,14 @@ export function Resources() {
                 <Input
                   placeholder="Search resources..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   leftIcon={<Search className="h-4 w-4 sm:h-5 sm:w-5" />}
                   rightIcon={
                     <button
                       ref={filterButtonRef}
                       onClick={(e) => {
                         e.stopPropagation()
-                        setIsFilterOpen(!isFilterOpen)
+                        handleToggleFilter()
                       }}
                       className="relative flex items-center justify-center touch-manipulation"
                       aria-label="Open filters"
@@ -396,7 +417,7 @@ export function Resources() {
               {/* Filter Popover */}
               <Popover
                 isOpen={isFilterOpen}
-                onClose={() => setIsFilterOpen(false)}
+                onClose={handleToggleFilter}
                 triggerRef={filterButtonRef}
                 align="right"
                 side="bottom"
@@ -405,12 +426,12 @@ export function Resources() {
               >
                 <FilterPopover
                   showSavedOnly={showSavedOnly}
-                  onShowSavedOnlyChange={setShowSavedOnly}
+                  onShowSavedOnlyChange={handleToggleSavedOnly}
                   selectedCategory={selectedCategory}
-                  onCategoryChange={setSelectedCategory}
+                  onCategoryChange={handleCategoryChange}
                   categories={categories}
                   favoriteCount={favoriteCount}
-                  onClose={() => setIsFilterOpen(false)}
+                  onClose={handleToggleFilter}
                 />
               </Popover>
             </motion.div>
@@ -619,8 +640,8 @@ export function Resources() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setSearchQuery('')
-                          setSelectedCategory(null)
+                          handleClearSearch()
+                          handleCategoryChange(null)
                           setShowSavedOnly(false)
                         }}
                         className="min-h-[44px]"
@@ -638,3 +659,5 @@ export function Resources() {
     </>
   )
 }
+
+export const Resources = memo(ResourcesComponent)

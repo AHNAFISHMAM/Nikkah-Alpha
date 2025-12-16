@@ -308,7 +308,7 @@ export function Login() {
           </div>
 
           {/* Scrollable form content */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6 safe-area-inset-bottom scroll-smooth scrollbar-thin">
+          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6 safe-area-inset-bottom scroll-smooth scrollbar-thin min-h-0">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

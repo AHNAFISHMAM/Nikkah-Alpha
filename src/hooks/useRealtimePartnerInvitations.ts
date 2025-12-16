@@ -67,8 +67,8 @@ export function useRealtimePartnerInvitations() {
           if (!isMountedRef.current) return
           
           // Check if this invitation is relevant to the current user
-          const newData = payload.new as any
-          const oldData = payload.old as any
+          const newData = payload.new as { inviter_id?: string; invitee_email?: string } | null
+          const oldData = payload.old as { inviter_id?: string; invitee_email?: string } | null
           const invitation = newData || oldData
           
           if (invitation && (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
@@ -61,7 +61,7 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 } as const
 
-export function Profile() {
+function ProfileComponent() {
   const { user, logout, isAuthenticated } = useAuth()
   const { data: profile } = useProfile()
   const updateProfileMutation = useUpdateProfile()
@@ -785,3 +785,5 @@ export function Profile() {
     </>
   )
 }
+
+export const Profile = memo(ProfileComponent)

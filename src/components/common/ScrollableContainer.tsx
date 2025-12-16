@@ -75,7 +75,7 @@ export function ScrollableContainer({
   }[scrollbarStyle]
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {/* Top Fade Indicator */}
       <AnimatePresence>
         {showFadeIndicators && showTopFade && (
@@ -92,7 +92,7 @@ export function ScrollableContainer({
       {/* Scrollable Content */}
       <div
         ref={containerRef}
-        className={`overflow-y-auto overflow-x-hidden ${scrollbarClasses} scroll-smooth`}
+        className={`overflow-y-auto overflow-x-hidden ${scrollbarClasses} scroll-smooth flex-1`}
         style={{
           // Custom scrollbar styling for webkit browsers
           scrollbarWidth: scrollbarStyle === 'none' ? 'none' : scrollbarStyle === 'thin' ? 'thin' : 'auto',
@@ -100,8 +100,6 @@ export function ScrollableContainer({
           WebkitOverflowScrolling: 'touch',
           // Force scrollable area - critical for flex containers
           minHeight: 0,
-          maxHeight: '100%',
-          height: '100%',
         }}
       >
         {children}

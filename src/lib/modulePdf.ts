@@ -384,7 +384,7 @@ export async function generateModulePDF(
 
     doc.save(fileName)
   } catch (error) {
-    console.error('PDF Generation Error:', error)
+    logError('PDF Generation Error', error, 'modulePdf')
 
     if (error instanceof Error) {
       if (error.message.includes('jsPDF')) {

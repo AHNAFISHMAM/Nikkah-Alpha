@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -38,7 +38,7 @@ const TABS: Array<{ id: TabType; label: string; icon: typeof Wallet }> = [
   { id: 'savings', label: 'Savings', icon: Coins },
 ]
 
-export function Financial() {
+function FinancialComponent() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') as TabType | null
   // Memoize initial tab calculation
@@ -66,6 +66,11 @@ export function Financial() {
       setActiveTab(tabParam)
     }
   }, [isValidTab, tabParam])
+  
+  // Memoize tab change handler
+  const handleTabChange = useCallback((tabId: TabType) => {
+    setActiveTab(tabId)
+  }, [])
   
   // Auto-scroll to section when hash is present in URL
   useScrollToSection()
@@ -112,7 +117,7 @@ export function Financial() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={cn(
                       'flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2',
                       'px-3 sm:px-4 py-3 sm:py-4 min-h-[56px] sm:min-h-[48px]',

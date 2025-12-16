@@ -33,7 +33,7 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
 
   // Ensure we're on client side before creating client
   if (!isClient) {
-    console.warn('Supabase client can only be created on the client side')
+    logWarning('Supabase client can only be created on the client side', 'supabase')
     return null
   }
 
@@ -62,7 +62,8 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
         })
           .catch((error) => {
             // Suppress network errors for token refresh (happens automatically in background)
-            const isTokenRefresh = url.includes('/auth/v1/token') && url.includes('grant_type=refresh_token')
+            const urlString = typeof url === 'string' ? url : url instanceof URL ? url.toString() : ''
+            const isTokenRefresh = urlString.includes('/auth/v1/token') && urlString.includes('grant_type=refresh_token')
             
             // Check for network/DNS errors in various error properties
             const errorMessage = error?.message || error?.toString() || ''
@@ -123,6 +124,7 @@ export const signUp = async (email: string, password: string, fullName: string) 
   if (!supabase) {
     return { data: null, error: new Error('Supabase is not configured') }
   }
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -132,6 +134,56 @@ export const signUp = async (email: string, password: string, fullName: string) 
       },
     },
   })
+
+  // Handle case where email already exists
+  if (error) {
+    const errorMessage = error.message || ''
+    // Check if error is about existing user
+    const isExistingUserError = 
+      errorMessage.toLowerCase().includes('already registered') ||
+      errorMessage.toLowerCase().includes('already exists') ||
+      errorMessage.toLowerCase().includes('user already registered') ||
+      errorMessage.toLowerCase().includes('email address is already registered') ||
+      errorMessage.toLowerCase().includes('email already registered')
+
+    if (isExistingUserError) {
+      // Check if it's a deleted user profile (anonymized)
+      try {
+        const profileResult = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('email', email)
+          .maybeSingle()
+
+        const profile = profileResult.data as { email: string } | null
+        const profileError = profileResult.error
+
+        // If profile exists with deleted pattern, the auth user wasn't properly deleted
+        if (!profileError && profile?.email && typeof profile.email === 'string' && profile.email.startsWith('deleted_')) {
+          return {
+            data: null,
+            error: new Error(
+              'This email was previously used and deleted. Please wait a few minutes and try again, or contact support if the issue persists.'
+            ),
+          }
+        }
+      } catch (profileError) {
+        // Profile check failed - log but continue with original error
+        logWarning('Profile check failed during signup', 'supabase')
+      }
+
+      return {
+        data: null,
+        error: new Error(
+          'An account with this email already exists. Please sign in instead or use a different email address.'
+        ),
+      }
+    }
+
+    // Return original error for other cases
+    return { data, error }
+  }
+
   return { data, error }
 }
 

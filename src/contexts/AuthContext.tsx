@@ -324,6 +324,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data, error } = await signUp(email, password, fullName)
 
     if (error) {
+      // Log the error for debugging
+      logError(error, 'AuthContext.register - signUp failed')
       return { error: new Error(error.message) }
     }
 
@@ -331,7 +333,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (data?.user) {
       // Validate email exists
       if (!data.user.email) {
-        return { error: new Error('User email is required but not provided') }
+        const err = new Error('User email is required but not provided')
+        logError(err, 'AuthContext.register - missing email')
+        return { error: err }
       }
 
       // Split full name into first and last name if possible
@@ -349,11 +353,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
           first_name: first_name,
           last_name: last_name,
           role: 'user', // Default role for new users
-        } as any)
+        } as ProfileUpdate)
 
       if (profileError) {
+        // Log the profile error for debugging
+        logError('Profile creation error', profileError, 'AuthContext')
+        
         // If profile already exists (409 Conflict), try to update it instead
-        if (profileError.code === '23505' || profileError.message?.includes('409') || profileError.message?.includes('Conflict') || profileError.message?.includes('duplicate')) {
+        if (profileError.code === '23505' || 
+            profileError.message?.includes('409') || 
+            profileError.message?.includes('Conflict') || 
+            profileError.message?.includes('duplicate') ||
+            profileError.message?.includes('already exists')) {
           // Profile already exists, try to update it
           const { error: updateError } = await supabase
             .from('profiles')
@@ -362,16 +373,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
               full_name: fullName,
               first_name: first_name,
               last_name: last_name,
-            })
+            } as ProfileUpdate)
             .eq('id', data.user.id)
 
           if (updateError) {
             // Log but don't fail signup - profile can be created/updated later
-            logWarning('Profile update failed after signup', 'AuthContext')
+            logError('Profile update failed after signup', updateError, 'AuthContext')
           }
         } else {
           // Other errors - log but don't fail signup
-          logWarning('Profile creation failed after signup', 'AuthContext')
+          logError('Profile creation failed after signup', profileError, 'AuthContext')
         }
       }
       
@@ -458,7 +469,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const { error } = await supabase
       .from('profiles')
-      .update(updatePayload as any)
+      .update(updatePayload as ProfileUpdate)
       .eq('id', user.id)
 
     if (error) {

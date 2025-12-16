@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { SEO } from '../../components/SEO'
@@ -26,6 +26,7 @@ import { useRealtimePartnerDiscussionAnswers } from '../../hooks/useRealtimePart
 import { useRealtimeOwnDiscussionAnswers } from '../../hooks/useRealtimeOwnDiscussionAnswers'
 import { useScrollToSection } from '../../hooks/useScrollToSection'
 import { logError, getUserFriendlyError } from '../../lib/error-handler'
+import type { UserDiscussionAnswer, DiscussionPrompt, Database } from '../../types/database'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Progress } from '../../components/ui/Progress'
@@ -58,7 +59,7 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, y: 0 },
 } as const
 
-export function Discussions() {
+function DiscussionsComponent() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -88,7 +89,7 @@ export function Discussions() {
       const promptsResult = await supabase
         .from('discussion_prompts')
         .select('*')
-        .order('order_index', { ascending: true })
+        .order('sort_order', { ascending: true })
 
       if (promptsResult.error) {
         logError(promptsResult.error, 'Discussions.fetchDiscussions')
@@ -97,7 +98,7 @@ export function Discussions() {
 
       // Fetch user answers with error handling for schema cache issues
       // If table isn't in cache yet (404), return empty answers array
-      let answersResult: { data: any[] | null; error: any } = { data: [], error: null }
+      let answersResult: { data: UserDiscussionAnswer[] | null; error: Error | null } = { data: [], error: null }
       try {
         const result = await supabase
           .from('user_discussion_answers')
@@ -107,7 +108,7 @@ export function Discussions() {
         if (result.error) {
           // Check for 404, schema cache errors, or table not found
           const error = result.error
-          const statusCode = (error as any)?.status || (error as any)?.code
+          const statusCode = (error as { status?: number; code?: string | number })?.status || (error as { status?: number; code?: string | number })?.code
           const errorMessage = error.message || String(error)
           
           // Handle 404 or schema cache issues gracefully
@@ -128,10 +129,11 @@ export function Discussions() {
           // Success - use the data
           answersResult = result
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Catch network errors, 404s, or any other exceptions
-        const errorMessage = err?.message || String(err)
-        const statusCode = err?.status || err?.code || err?.statusCode
+        const error = err as { message?: string; status?: number; code?: string | number; statusCode?: number }
+        const errorMessage = error?.message || String(err)
+        const statusCode = error?.status || error?.code || error?.statusCode
         
         // Handle 404 or schema cache issues gracefully
         if (statusCode === 404 || 
@@ -150,30 +152,13 @@ export function Discussions() {
       }
 
       // Combine prompts with user answers
-      type PromptData = {
-        id: string
-        category: string
-        title: string
-        description: string | null
-        order_index: number
-        created_at: string
+      type PromptWithAnswers = DiscussionPrompt & {
+        user_discussion_answers: UserDiscussionAnswer[]
       }
 
-      type AnswerData = {
-        id: string
-        user_id: string
-        prompt_id: string
-        answer: string | null
-        is_discussed: boolean
-        follow_up_notes: string | null
-        discussed_at: string | null
-        created_at: string
-        updated_at: string
-      }
-
-      const prompts = (promptsResult.data || []) as PromptData[]
-      const answers = ((answersResult?.data || []) as AnswerData[]) || []
-      const answersByPromptId = new Map<string, AnswerData>(
+      const prompts = (promptsResult.data || []) as DiscussionPrompt[]
+      const answers = (answersResult?.data || []) as UserDiscussionAnswer[]
+      const answersByPromptId = new Map<string, UserDiscussionAnswer>(
         answers.map(a => [a.prompt_id, a])
       )
 
@@ -183,14 +168,15 @@ export function Discussions() {
         user_discussion_answers: answersByPromptId.has(prompt.id) 
           ? [answersByPromptId.get(prompt.id)!] 
           : []
-      })) as any[]
+      })) as PromptWithAnswers[]
     },
     enabled: !!user,
-    staleTime: 60000,
-    retry: (failureCount, error: any) => {
+    staleTime: 1000 * 60 * 5, // 5 minutes - discussion prompts don't change often
+    retry: (failureCount, error: unknown) => {
       // Don't retry on 404 or schema cache errors
-      const statusCode = error?.status || error?.code || error?.statusCode
-      const errorMessage = error?.message || String(error)
+      const err = error as { status?: number; code?: string | number; statusCode?: number; message?: string }
+      const statusCode = err?.status || err?.code || err?.statusCode
+      const errorMessage = err?.message || String(error)
       
       if (statusCode === 404 || 
           statusCode === 'PGRST116' ||
@@ -219,7 +205,7 @@ export function Discussions() {
           user_id: user.id,
           prompt_id: promptId,
           is_discussed: !isDiscussed,
-        } as any, {
+        } as Database['public']['Tables']['user_discussion_answers']['Insert'], {
           onConflict: 'user_id,prompt_id'
         })
 
@@ -254,8 +240,13 @@ export function Discussions() {
   // Use safe defaults while loading - memoized
   const displayPrompts = useMemo(() => prompts || [], [prompts])
   
+  // Type for prompt with answers
+  type PromptWithAnswers = DiscussionPrompt & {
+    user_discussion_answers: UserDiscussionAnswer[]
+  }
+
   // Memoize grouped prompts calculation
-  const groupedPrompts = useMemo(() => displayPrompts.reduce((acc: Record<string, any[]>, prompt: any) => {
+  const groupedPrompts = useMemo(() => displayPrompts.reduce((acc: Record<string, PromptWithAnswers[]>, prompt: PromptWithAnswers) => {
     const category = prompt.category || 'Other'
     if (!acc[category]) acc[category] = []
     acc[category].push(prompt)
@@ -265,9 +256,9 @@ export function Discussions() {
   // Memoize progress calculations
   const { totalPrompts, discussedPrompts, progress, isAllDiscussed } = useMemo(() => {
     const total = displayPrompts.length
-    const discussed = displayPrompts.filter((p: any) => {
+    const discussed = displayPrompts.filter((p: PromptWithAnswers) => {
     const answers = Array.isArray(p.user_discussion_answers) ? p.user_discussion_answers : []
-    return answers.some((a: any) => a.is_discussed)
+    return answers.some((a: UserDiscussionAnswer) => a.is_discussed)
   }).length
     const progressPercent = total > 0 ? (discussed / total) * 100 : 0
     const allDiscussed = discussed === total && total > 0
@@ -462,11 +453,11 @@ export function Discussions() {
               variants={CONTAINER_VARIANTS}
               className="space-y-6 sm:space-y-8 mt-6 sm:mt-8"
             >
-            {groupedPrompts && Object.entries(groupedPrompts).map(([category, categoryPrompts]: [string, any[]]) => {
+            {groupedPrompts && Object.entries(groupedPrompts).map(([category, categoryPrompts]: [string, PromptWithAnswers[]]) => {
               const config = CATEGORY_CONFIG[category] || { color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageCircle }
               const CategoryIcon = config.icon
-              const categoryDiscussed = categoryPrompts.filter((p: any) =>
-                p.user_discussion_answers?.some((a: any) => a.is_discussed)
+              const categoryDiscussed = categoryPrompts.filter((p: PromptWithAnswers) =>
+                p.user_discussion_answers?.some((a: UserDiscussionAnswer) => a.is_discussed)
               ).length
 
                 return (
@@ -493,7 +484,7 @@ export function Discussions() {
 
                     {/* Category Prompts */}
                     <div className="space-y-4 sm:space-y-5">
-                      {categoryPrompts.map((prompt: any) => {
+                      {categoryPrompts.map((prompt: PromptWithAnswers) => {
                         const isExpanded = expandedPrompts.has(prompt.id)
                         const userAnswer = prompt.user_discussion_answers?.[0]
                         const isDiscussed = userAnswer?.is_discussed || false
@@ -646,3 +637,5 @@ export function Discussions() {
     </>
   )
 }
+
+export const Discussions = memo(DiscussionsComponent)

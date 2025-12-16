@@ -204,7 +204,7 @@ export interface Database {
           title: string
           description: string | null
           content: string | null
-          order_index: number
+          sort_order: number
           created_at: string
           updated_at: string
         }
@@ -213,7 +213,7 @@ export interface Database {
           title: string
           description?: string | null
           content?: string | null
-          order_index?: number
+          sort_order?: number
           created_at?: string
           updated_at?: string
         }
@@ -222,7 +222,7 @@ export interface Database {
           title?: string
           description?: string | null
           content?: string | null
-          order_index?: number
+          sort_order?: number
           created_at?: string
           updated_at?: string
         }

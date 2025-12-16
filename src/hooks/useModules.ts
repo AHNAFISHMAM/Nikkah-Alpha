@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import type { Module } from '../types/database'
+import type { Module, Lesson, UserModuleProgress } from '../types/database'
 
 export interface ModuleWithProgress extends Module {
   completedLessons: number
@@ -16,6 +16,8 @@ export interface ModuleWithProgress extends Module {
 export function useModules() {
   return useQuery({
     queryKey: ['modules'],
+    staleTime: 1000 * 60 * 10, // 10 minutes - modules rarely change
+    gcTime: 1000 * 60 * 60, // 1 hour cache
     queryFn: async () => {
       if (!supabase) {
         throw new Error('Supabase is not configured')
@@ -28,10 +30,10 @@ export function useModules() {
       
       if (error) throw error
       
-      // Sort client-side by order_index (more reliable than server-side ordering)
+      // Sort client-side by sort_order (more reliable than server-side ordering)
       const sorted = (data as Module[]).sort((a, b) => {
-        const aIndex = (a as any).order_index ?? 999
-        const bIndex = (b as any).order_index ?? 999
+        const aIndex = 'sort_order' in a ? (a as Module & { sort_order: number }).sort_order : 999
+        const bIndex = 'sort_order' in b ? (b as Module & { sort_order: number }).sort_order : 999
         return aIndex - bIndex
       })
       
@@ -46,6 +48,8 @@ export function useModules() {
 export function useModule(moduleId: string | undefined) {
   return useQuery({
     queryKey: ['module', moduleId],
+    staleTime: 1000 * 60 * 10, // 10 minutes - modules rarely change
+    gcTime: 1000 * 60 * 60, // 1 hour cache
     queryFn: async () => {
       if (!supabase || !moduleId) {
         throw new Error('Supabase is not configured or module ID is missing')
@@ -79,7 +83,7 @@ export function useModulesWithProgress() {
         throw new Error('Supabase is not configured')
       }
       const { data, error } = await supabase
-        .from('lessons' as any)
+        .from('lessons')
         .select('id, module_id')
         .order('sort_order')
 
@@ -97,7 +101,7 @@ export function useModulesWithProgress() {
         return []
       }
       const { data, error } = await supabase
-        .from('user_module_progress' as any)
+        .from('user_module_progress')
         .select('module_id, lesson_id, is_completed')
         .eq('user_id', user.id)
 
@@ -111,12 +115,12 @@ export function useModulesWithProgress() {
   const modulesWithProgress: ModuleWithProgress[] =
     modulesData && lessonsData && progressData
       ? modulesData.map((module) => {
-          const moduleLessons = (lessonsData as any[]).filter(
-            (lesson: any) => lesson.module_id === module.id
+          const moduleLessons = (lessonsData as Lesson[]).filter(
+            (lesson: Lesson) => lesson.module_id === module.id
           )
           const totalLessons = moduleLessons.length
-          const completedProgress = (progressData as any[]).filter(
-            (p: any) => p.module_id === module.id && p.is_completed
+          const completedProgress = (progressData as UserModuleProgress[]).filter(
+            (p: UserModuleProgress) => p.module_id === module.id && p.is_completed
           )
           const completedLessons = completedProgress.length
           const isCompleted = totalLessons > 0 && completedLessons === totalLessons

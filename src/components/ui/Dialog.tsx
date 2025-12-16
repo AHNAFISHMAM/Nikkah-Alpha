@@ -193,7 +193,7 @@ export const Dialog = memo(function Dialog({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 min-h-0">
             {children}
           </div>
         </motion.div>

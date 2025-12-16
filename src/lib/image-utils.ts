@@ -57,7 +57,7 @@ export function generatePlaceholder(
 
     return canvas.toDataURL()
   } catch (error) {
-    console.error('Error generating placeholder:', error)
+    logError('Error generating placeholder', error, 'image-utils')
     // Fallback to SVG
     return `data:image/svg+xml,${encodeURIComponent(
       `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">

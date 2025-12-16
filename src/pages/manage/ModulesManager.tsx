@@ -91,8 +91,8 @@ export function ModulesManager() {
 
       if (formData.id) {
         // Update existing module
-        const { data, error } = await (supabase
-          .from('modules') as any)
+        const { data, error } = await supabase
+          .from('modules')
           .update({
             title: formData.title,
             description: formData.description || null,
@@ -107,8 +107,8 @@ export function ModulesManager() {
         return data
       } else {
         // Create new module
-        const { data, error } = await (supabase
-          .from('modules') as any)
+        const { data, error } = await supabase
+          .from('modules')
           .insert({
             id: `module-${Date.now()}`,
             title: formData.title,
@@ -132,7 +132,7 @@ export function ModulesManager() {
     },
     onError: (error: any) => {
       toast.error(editingModule ? 'Failed to update module' : 'Failed to create module')
-      console.error('Module save error:', error)
+      logError('Module save error', error, 'ModulesManager')
     },
   })
 
@@ -161,7 +161,7 @@ export function ModulesManager() {
         throw new Error('Supabase is not configured')
       }
       const { error } = await (supabase
-        .from('modules') as any)
+        .from('modules'))
         .update({ sort_order: newOrder, updated_at: new Date().toISOString() })
         .eq('id', moduleId)
 

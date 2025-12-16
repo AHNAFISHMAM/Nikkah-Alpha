@@ -25,7 +25,7 @@ export function useEnhancedRealtimePartnerInvitations() {
   // Network-aware debounce (faster on WiFi, slower on mobile data)
   const getDebounceDelay = useCallback(() => {
     if (typeof navigator !== 'undefined' && 'connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } }).connection
       // Slower updates on mobile data or data saver mode
       if (connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g') {
         return 1000 // Very slow networks
@@ -38,7 +38,7 @@ export function useEnhancedRealtimePartnerInvitations() {
   }, [])
 
   // Smart debounced invalidation with conflict detection
-  const debouncedInvalidate = useCallback((payload: any) => {
+  const debouncedInvalidate = useCallback((payload: { eventType: string; new?: unknown; old?: unknown }) => {
     const now = Date.now()
     const timeSinceLastUpdate = now - lastUpdateRef.current
 
@@ -72,10 +72,10 @@ export function useEnhancedRealtimePartnerInvitations() {
     }, getDebounceDelay())
   }, [user?.id, queryClient, getDebounceDelay])
 
-  // Reconnection logic with exponential backoff
+    // Reconnection logic with exponential backoff
   const reconnect = useCallback(() => {
     if (reconnectAttemptsRef.current >= 5) {
-      console.error('[Realtime] Max reconnection attempts reached for partner invitations')
+      logError('Max reconnection attempts reached for partner invitations', null, 'useEnhancedRealtimePartnerInvitations')
       reconnectAttemptsRef.current = 0 // Reset after max attempts
       return
     }
@@ -110,7 +110,7 @@ export function useEnhancedRealtimePartnerInvitations() {
         if (channelRef.current) {
           try {
             supabase.removeChannel(channelRef.current)
-            console.log('[Realtime] Paused partner invitations subscription (app in background)')
+            logDebug('[Realtime] Paused partner invitations subscription (app in background)', undefined, 'useEnhancedRealtimePartnerInvitations')
           } catch (error) {
             logWarning('[Realtime] Error pausing subscription', 'useEnhancedRealtimePartnerInvitations')
           }
@@ -172,8 +172,8 @@ export function useEnhancedRealtimePartnerInvitations() {
           if (!isMountedRef.current) return
 
           // Check if this invitation is relevant to the current user
-          const newData = payload.new as any
-          const oldData = payload.old as any
+          const newData = payload.new as { inviter_id?: string; invitee_email?: string; id?: string; status?: string } | null
+          const oldData = payload.old as { inviter_id?: string; invitee_email?: string; id?: string; status?: string } | null
           const invitation = newData || oldData
 
           if (
@@ -189,7 +189,7 @@ export function useEnhancedRealtimePartnerInvitations() {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
-          console.log(`[Realtime] Partner invitations channel subscribed for user ${user.id}`)
+          logDebug(`[Realtime] Partner invitations channel subscribed for user ${user.id}`, undefined, 'useEnhancedRealtimePartnerInvitations')
           reconnectAttemptsRef.current = 0 // Reset on successful subscription
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           logWarning(`[Realtime] Partner invitations channel status: ${status} for user ${user.id}`, 'useEnhancedRealtimePartnerInvitations')

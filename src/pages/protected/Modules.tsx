@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Search, AlertCircle, Loader2 } from 'lucide-react'
 import { SkeletonGrid, Skeleton } from '../../components/common/Skeleton'
@@ -35,7 +35,7 @@ const ITEM_VARIANTS = {
   },
 } as const
 
-export function Modules() {
+function ModulesComponent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'sort_order' | 'title' | 'completion'>('sort_order')
 
@@ -52,6 +52,19 @@ export function Modules() {
   // Memoize refetch function
   const refetchModules = useCallback(() => {
     window.location.reload()
+  }, [])
+  
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
+  }, [])
+  
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('')
+  }, [])
+  
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value as 'sort_order' | 'title' | 'completion')
   }, [])
 
   // Memoize filter and sort operations to prevent unnecessary recalculations
@@ -192,7 +205,7 @@ export function Modules() {
                           type="text"
                           placeholder="Search modules by title or description..."
                           value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onChange={handleSearchChange}
                           className="pl-10"
                         />
                       </div>
@@ -200,9 +213,7 @@ export function Modules() {
                     <div className="sm:w-48">
                       <select
                         value={sortBy}
-                        onChange={(e) =>
-                          setSortBy(e.target.value as 'sort_order' | 'title' | 'completion')
-                        }
+                        onChange={handleSortChange}
                         className="w-full h-10 px-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value="sort_order">Sort by Order</option>
@@ -228,7 +239,7 @@ export function Modules() {
                       <p className="text-muted-foreground mb-6">
                         Try adjusting your search query
                       </p>
-                      <Button variant="outline" onClick={() => setSearchQuery('')}>
+                      <Button variant="outline" onClick={handleClearSearch}>
                         Clear Search
                       </Button>
                     </>
@@ -259,3 +270,5 @@ export function Modules() {
     </>
   )
 }
+
+export const Modules = memo(ModulesComponent)

@@ -3,51 +3,22 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
-import { User, Calendar, ArrowRight, ArrowLeft, Sparkles, MapPin, Heart, Mail } from 'lucide-react'
+import { ArrowRight, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
 import { Card, CardContent } from '../../components/ui/Card'
-import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
-import { CustomDropdown } from '../../components/ui/CustomDropdown'
-import { Label } from '../../components/ui/Label'
 import { Progress } from '../../components/ui/Progress'
 import { calculateAge, debounce, cn } from '../../lib/utils'
 import { validateName, validateEmail } from '../../lib/validation'
 import { logError } from '../../lib/error-handler'
 import { logWarning, logInfo } from '../../lib/logger'
 import { supabase } from '../../lib/supabase'
-import { DatePicker } from '../../components/ui/DatePicker'
-
-type Step = 'essential' | 'personal' | 'location' | 'relationship'
-
-// Extract constants to prevent recreation
-const STEP_CONFIG = {
-  essential: { index: 0, icon: User, title: 'Essential Information', subtitle: "Let's start with your name" },
-  personal: { index: 1, icon: Calendar, title: 'Personal Details', subtitle: 'Help us personalize your experience' },
-  location: { index: 2, icon: MapPin, title: 'Location', subtitle: 'Optional - helps us provide relevant content' },
-  relationship: { index: 3, icon: Heart, title: 'Relationship', subtitle: 'Tell us about your partner' },
-} as const
-
-const COUNTRIES: { value: string; label: string }[] = [
-  { value: 'US', label: 'United States' },
-  { value: 'CA', label: 'Canada' },
-  { value: 'GB', label: 'United Kingdom' },
-  { value: 'AU', label: 'Australia' },
-  { value: 'SA', label: 'Saudi Arabia' },
-  { value: 'AE', label: 'United Arab Emirates' },
-  { value: 'PK', label: 'Pakistan' },
-  { value: 'BD', label: 'Bangladesh' },
-  { value: 'IN', label: 'India' },
-  { value: 'MY', label: 'Malaysia' },
-  { value: 'ID', label: 'Indonesia' },
-  { value: 'TR', label: 'Turkey' },
-  { value: 'EG', label: 'Egypt' },
-  { value: 'ZA', label: 'South Africa' },
-  { value: 'NG', label: 'Nigeria' },
-  { value: 'KE', label: 'Kenya' },
-  { value: 'OTHER', label: 'Other' },
-]
+import { STEP_CONFIG, type Step } from '../../components/profile-setup/constants'
+import { EssentialStep } from '../../components/profile-setup/EssentialStep'
+import { PersonalStep } from '../../components/profile-setup/PersonalStep'
+import { LocationStep } from '../../components/profile-setup/LocationStep'
+import { RelationshipStep } from '../../components/profile-setup/RelationshipStep'
+import type { ProfileFormData } from '../../components/profile-setup/types'
 
 /**
  * ProfileSetup Component
@@ -109,7 +80,7 @@ export function ProfileSetup() {
   // Track completed/visited steps to allow navigation back
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set(['essential']))
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
     date_of_birth: profile?.date_of_birth || '',
@@ -183,7 +154,7 @@ export function ProfileSetup() {
    * - Cross-field validation for city/country dependency
    * - Self-invite check compares normalized emails
    */
-  const validateField = useCallback((fieldName: string, value: any): string | null => {
+  const validateField = useCallback((fieldName: string, value: string | boolean | undefined): string | null => {
     switch (fieldName) {
       case 'first_name':
         return validateName(value, 'first_name')
@@ -261,7 +232,7 @@ export function ProfileSetup() {
   // Debounced real-time validation (300ms delay)
   const debouncedValidate = useMemo(
     () => {
-      const validate = (fieldName: string, value: any) => {
+      const validate = (fieldName: string, value: string | boolean | undefined) => {
         if (!touched[fieldName]) return // Don't validate until touched
         
         const error = validateField(fieldName, value)
@@ -275,7 +246,7 @@ export function ProfileSetup() {
           }
         })
       }
-      return debounce(validate as (...args: unknown[]) => unknown, 300) as (fieldName: string, value: any) => void
+      return debounce(validate as (...args: unknown[]) => unknown, 300) as (fieldName: string, value: string | boolean | undefined) => void
     },
     [touched, validateField]
   )
@@ -783,20 +754,37 @@ export function ProfileSetup() {
     }
   }
 
-  const handleBlur = (field: string) => {
+  const handleBlur = useCallback((field: keyof ProfileFormData) => {
     setTouched(prev => ({ ...prev, [field]: true }))
-    const value = formData[field as keyof typeof formData]
-    const error = validateField(field, value)
-    setErrors(prev => {
-      if (error) {
-        return { ...prev, [field]: error }
-      } else {
+    const value = formData[field]
+    const error = validateField(field, value as string | boolean | undefined)
+    if (error) {
+      setErrors(prev => ({ ...prev, [field]: error }))
+    } else {
+      setErrors(prev => {
         const newErrors = { ...prev }
         delete newErrors[field]
         return newErrors
+      })
+    }
+  }, [formData, validateField])
+
+  const handleFieldChange = useCallback((field: keyof ProfileFormData, value: string | boolean | null) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error if field becomes valid
+    if (touched[field]) {
+      const error = validateField(field, value as string | boolean | undefined)
+      if (error) {
+        setErrors(prev => ({ ...prev, [field]: error }))
+      } else {
+        setErrors(prev => {
+          const newErrors = { ...prev }
+          delete newErrors[field]
+          return newErrors
+        })
       }
-    })
-  }
+    }
+  }, [touched, validateField])
 
   return (
     <>
@@ -943,7 +931,7 @@ export function ProfileSetup() {
           </div>
 
           {/* Scrollable form content */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6 safe-area-inset-bottom scroll-smooth">
+          <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6 safe-area-inset-bottom scroll-smooth min-h-0">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -989,627 +977,58 @@ export function ProfileSetup() {
               }}
             >
               <AnimatePresence mode="wait">
-                {/* Step 1: Essential Information (First Name + Last Name) */}
                 {step === 'essential' && (
-                  <motion.div
-                    key="essential"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="space-y-3">
-                      <div>
-                        <Input
-                          id="first_name"
-                          label="First Name"
-                          value={formData.first_name}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            setFormData({ ...formData, first_name: value })
-                            // Clear error immediately if field becomes valid
-                            if (value && validateName(value, 'first_name') === null && errors.first_name) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.first_name
-                                return newErrors
-                              })
-                            }
-                          }}
-                          onBlur={() => handleBlur('first_name')}
-                          placeholder="Enter your first name"
-                          autoFocus
-                          maxLength={50}
-                          error={touched.first_name ? errors.first_name : undefined}
-                          hint="This will be visible to other users. Letters, spaces, hyphens, and apostrophes only."
-                          leftIcon={<User className="h-4 w-4" />}
-                          aria-invalid={touched.first_name && !!errors.first_name}
-                        />
-                        {touched.first_name && !errors.first_name && formData.first_name && (
-                          <motion.p
-                            key="success"
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            transition={{ duration: 0.2 }}
-                            id="first_name-success"
-                            className="text-xs sm:text-sm text-success font-medium mt-1.5 px-1"
-                            aria-live="polite"
-                          >
-                            ✓ Valid name
-                          </motion.p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Input
-                          id="last_name"
-                          label="Last Name (Optional)"
-                          value={formData.last_name}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            setFormData({ ...formData, last_name: value })
-                            // Clear error immediately if field becomes valid
-                            if (value && value.trim() && validateName(value, 'last_name') === null && errors.last_name) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.last_name
-                                return newErrors
-                              })
-                            }
-                          }}
-                          onBlur={() => handleBlur('last_name')}
-                          placeholder="Enter your last name"
-                          maxLength={50}
-                          error={touched.last_name ? errors.last_name : undefined}
-                          leftIcon={<User className="h-4 w-4" />}
-                          aria-invalid={touched.last_name && !!errors.last_name}
-                        />
-                        {touched.last_name && !errors.last_name && formData.last_name && (
-                          <motion.p
-                            key="success"
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            transition={{ duration: 0.2 }}
-                            id="last_name-success"
-                            className="text-xs sm:text-sm text-success font-medium mt-1.5 px-1"
-                            aria-live="polite"
-                          >
-                            ✓ Valid name
-                          </motion.p>
-                        )}
-                      </div>
-
-                      <div className="pt-4 mt-2 flex gap-3">
-                        <Button
-                          onClick={handleBack}
-                          variant="outline"
-                          className="flex-1"
-                          size="sm"
-                          leftIcon={<ArrowLeft className="h-4 w-4" />}
-                          disabled={step === 'essential'}
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          onClick={handleNext}
-                          className="flex-1"
-                          size="sm"
-                          rightIcon={<ArrowRight className="h-4 w-4" />}
-                          disabled={!formData.first_name.trim()}
-                        >
-                          Continue
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <EssentialStep
+                    formData={formData}
+                    errors={errors}
+                    touched={touched}
+                    onFieldChange={handleFieldChange}
+                    onFieldBlur={handleBlur}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                  />
                 )}
 
-                {/* Step 2: Personal Details */}
                 {step === 'personal' && (
-                  <motion.div
-                    key="personal"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="space-y-4">
-                      {/* Date of Birth */}
-                      <div>
-                        <Label htmlFor="date_of_birth" required className="text-sm font-medium mb-1.5">
-                          Date of Birth
-                        </Label>
-                        <DatePicker
-                          id="date_of_birth"
-                          value={formData.date_of_birth}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            setFormData({ ...formData, date_of_birth: value })
-                            handleBlur('date_of_birth')
-                            // Clear error immediately if field becomes valid
-                            if (value && validateField('date_of_birth', value) === null && errors.date_of_birth) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.date_of_birth
-                                return newErrors
-                              })
-                            }
-                          }}
-                          onDateChange={(date) => {
-                            setFormData({ ...formData, date_of_birth: date })
-                            handleBlur('date_of_birth')
-                            // Clear error immediately if field becomes valid
-                            if (date && validateField('date_of_birth', date) === null && errors.date_of_birth) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.date_of_birth
-                                return newErrors
-                              })
-                            }
-                          }}
-                          onBlur={() => handleBlur('date_of_birth')}
-                          min={minDate}
-                          max={maxDate}
-                          placeholder="mm/dd/yyyy"
-                          required
-                          error={touched.date_of_birth ? !!errors.date_of_birth : undefined}
-                          helperText={touched.date_of_birth && errors.date_of_birth ? errors.date_of_birth : undefined}
-                          className="w-full"
-                          aria-invalid={touched.date_of_birth && !!errors.date_of_birth}
-                        />
-                        <AnimatePresence mode="wait">
-                          {calculatedAge !== null && !errors.date_of_birth && formData.date_of_birth ? (
-                            <motion.p
-                              key="success"
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs sm:text-sm text-primary font-medium mt-1.5 px-1"
-                              aria-live="polite"
-                            >
-                              ✓ You are {calculatedAge} {calculatedAge === 1 ? 'year' : 'years'} old
-                            </motion.p>
-                          ) : !touched.date_of_birth && !formData.date_of_birth ? (
-                            <motion.p
-                              key="hint"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="text-xs sm:text-sm text-muted-foreground mt-1.5"
-                            >
-                              Tap to select your date of birth. You must be 18 years or older.
-                            </motion.p>
-                          ) : null}
-                        </AnimatePresence>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-2 px-1 leading-relaxed">
-                          We collect your date of birth to verify you meet the age requirement and to personalize your experience with age-appropriate content.
-                        </p>
-                      </div>
-
-                      {/* Gender */}
-                      <div>
-                        <div className="mb-1.5">
-                          <label
-                            htmlFor="gender"
-                            className="block text-sm font-medium text-foreground"
-                          >
-                            Gender
-                            <span className="text-destructive ml-1">*</span>
-                          </label>
-                        </div>
-                        <CustomDropdown
-                          id="gender"
-                          value={formData.gender}
-                          onChange={(value) => {
-                            const genderValue = value as 'male' | 'female' | 'prefer_not_to_say'
-                            setFormData({ ...formData, gender: genderValue })
-                            handleBlur('gender')
-                            // Clear error immediately if field becomes valid
-                            if (genderValue && validateField('gender', genderValue) === null && errors.gender) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.gender
-                                return newErrors
-                              })
-                            }
-                          }}
-                          options={[
-                            { value: 'male', label: 'Male' },
-                            { value: 'female', label: 'Female' },
-                            { value: 'prefer_not_to_say', label: 'Prefer not to say' }
-                          ]}
-                          placeholder="Select your gender"
-                          className="w-full"
-                        />
-                        {touched.gender && errors.gender && (
-                          <p className="text-xs text-error mt-1.5 px-1">{errors.gender}</p>
-                        )}
-                        {!touched.gender && !formData.gender && (
-                          <p className="text-xs text-muted-foreground mt-1.5 px-1">
-                            Tap to select your gender. This helps us personalize your experience.
-                          </p>
-                        )}
-                        <AnimatePresence mode="wait">
-                          {formData.gender && !errors.gender && touched.gender ? (
-                            <motion.p
-                              key="success"
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs sm:text-sm text-primary font-medium mt-1.5 px-1"
-                              aria-live="polite"
-                            >
-                              ✓ Gender selected
-                            </motion.p>
-                          ) : null}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Marital Status */}
-                      <div>
-                        <div className="mb-1.5">
-                          <label
-                            htmlFor="marital_status"
-                            className="block text-sm font-medium text-foreground"
-                          >
-                            Marital Status
-                            <span className="text-destructive ml-1">*</span>
-                          </label>
-                        </div>
-                        <CustomDropdown
-                          id="marital_status"
-                          value={formData.marital_status}
-                          onChange={(value) => {
-                            const statusValue = value as 'Single' | 'Engaged' | 'Researching'
-                            setFormData({ ...formData, marital_status: statusValue })
-                            handleBlur('marital_status')
-                            // Clear error immediately if field becomes valid
-                            if (statusValue && validateField('marital_status', statusValue) === null && errors.marital_status) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev }
-                                delete newErrors.marital_status
-                                return newErrors
-                              })
-                            }
-                          }}
-                          options={[
-                            { value: 'Single', label: 'Single' },
-                            { value: 'Engaged', label: 'Engaged' },
-                            { value: 'Researching', label: 'Researching' }
-                          ]}
-                          placeholder="Select status..."
-                          className="w-full"
-                        />
-                        {touched.marital_status && errors.marital_status && (
-                          <p className="text-xs text-error mt-1.5 px-1">{errors.marital_status}</p>
-                        )}
-                        {!touched.marital_status && !formData.marital_status && (
-                          <p className="text-xs text-muted-foreground mt-1.5 px-1">
-                            Tap to select your current relationship status.
-                          </p>
-                        )}
-                        <AnimatePresence mode="wait">
-                          {formData.marital_status && !errors.marital_status && touched.marital_status ? (
-                            <motion.p
-                              key="success"
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-xs sm:text-sm text-primary font-medium mt-1.5 px-1"
-                              aria-live="polite"
-                            >
-                              ✓ Status selected
-                            </motion.p>
-                          ) : null}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Navigation Buttons */}
-                      <div className="pt-4 flex gap-3">
-                        <Button
-                          onClick={handleBack}
-                          variant="outline"
-                          className="flex-1"
-                          size="sm"
-                          leftIcon={<ArrowLeft className="h-4 w-4" />}
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          onClick={handleNext}
-                          className="flex-1"
-                          size="sm"
-                          rightIcon={<ArrowRight className="h-4 w-4" />}
-                          disabled={
-                            !!errors.date_of_birth ||
-                            !!errors.gender ||
-                            !!errors.marital_status ||
-                            !formData.date_of_birth ||
-                            !formData.gender ||
-                            !formData.marital_status
-                          }
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <PersonalStep
+                    formData={formData}
+                    errors={errors}
+                    touched={touched}
+                    onFieldChange={handleFieldChange}
+                    onFieldBlur={handleBlur}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                    dateConstraints={{ maxDate, minDate }}
+                    calculatedAge={calculatedAge}
+                    validateField={validateField}
+                  />
                 )}
 
-                {/* Step 3: Location */}
                 {step === 'location' && (
-                  <motion.div
-                    key="location"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="space-y-3">
-                      <div>
-                        <div className="mb-1.5">
-                          <label
-                            htmlFor="country"
-                            className="block text-sm font-medium text-foreground"
-                          >
-                            Country (Optional)
-                          </label>
-                        </div>
-                        <CustomDropdown
-                          id="country"
-                          value={formData.country}
-                          onChange={(value) => {
-                            setFormData({ ...formData, country: value, city: value ? formData.city : '' })
-                            if (touched.country) {
-                              validateStep()
-                            }
-                          }}
-                          options={COUNTRIES}
-                          placeholder="Select your country"
-                          className="w-full"
-                        />
-                        {touched.country && errors.country && (
-                          <p className="text-xs text-error mt-1.5 px-1">{errors.country}</p>
-                        )}
-                      </div>
-
-                      {formData.country && (
-                        <AnimatePresence>
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Input
-                              label="City (Required if country selected)"
-                              value={formData.city}
-                              onChange={(e) => {
-                                setFormData({ ...formData, city: e.target.value })
-                                if (touched.city) {
-                                  validateStep()
-                                }
-                              }}
-                              onBlur={() => handleBlur('city')}
-                              placeholder="Enter your city"
-                              error={touched.city ? errors.city : undefined}
-                              leftIcon={<MapPin className="h-4 w-4" />}
-                              aria-invalid={touched.city && !!errors.city}
-                            />
-                          </motion.div>
-                        </AnimatePresence>
-                      )}
-
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="text-xs sm:text-sm text-muted-foreground mt-2 px-1 leading-relaxed"
-                      >
-                        Location information helps us provide relevant content, resources, and connect you with local marriage preparation services in your area.
-                      </motion.p>
-
-                    <div className="pt-4 flex gap-3">
-                      <Button
-                        onClick={handleBack}
-                        variant="outline"
-                        className="flex-1"
-                        size="sm"
-                        leftIcon={<ArrowLeft className="h-4 w-4" />}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleNext}
-                        className="flex-1"
-                        size="sm"
-                        rightIcon={<ArrowRight className="h-4 w-4" />}
-                      >
-                        Continue
-                      </Button>
-                    </div>
-                    </div>
-                  </motion.div>
+                  <LocationStep
+                    formData={formData}
+                    errors={errors}
+                    touched={touched}
+                    onFieldChange={handleFieldChange}
+                    onFieldBlur={handleBlur}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                  />
                 )}
 
-                {/* Step 4: Relationship */}
                 {step === 'relationship' && (
-                  <motion.div
-                    key="relationship"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="space-y-3">
-                      <Input
-                        label="Partner Name (Optional)"
-                        value={formData.partner_name}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          setFormData({ ...formData, partner_name: value })
-                          // Clear error immediately if field becomes valid
-                          if (value && validateName(value, 'partner_name') === null && errors.partner_name) {
-                            setErrors(prev => {
-                              const newErrors = { ...prev }
-                              delete newErrors.partner_name
-                              return newErrors
-                            })
-                          }
-                        }}
-                        onBlur={() => handleBlur('partner_name')}
-                        placeholder="Enter your partner's name"
-                        error={touched.partner_name ? errors.partner_name : undefined}
-                        hint="Letters, spaces, hyphens, and apostrophes only."
-                        leftIcon={<Heart className="h-4 w-4" />}
-                        aria-invalid={touched.partner_name && !!errors.partner_name}
-                      />
-
-                      <div>
-                        <Label htmlFor="wedding_date" className="text-sm font-medium mb-1.5">
-                          Wedding Date (Optional)
-                        </Label>
-                        <DatePicker
-                          id="wedding_date"
-                          value={formData.wedding_date}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            setFormData({ ...formData, wedding_date: value })
-                            // Clear error immediately if field becomes valid
-                            if (value && touched.wedding_date && errors.wedding_date) {
-                              const weddingDate = new Date(value)
-                              const today = new Date()
-                              today.setHours(0, 0, 0, 0)
-                              const maxDate = new Date()
-                              maxDate.setFullYear(maxDate.getFullYear() + 10)
-                              maxDate.setHours(0, 0, 0, 0)
-                              if (weddingDate >= today && weddingDate <= maxDate) {
-                                setErrors(prev => {
-                                  const newErrors = { ...prev }
-                                  delete newErrors.wedding_date
-                                  return newErrors
-                                })
-                              }
-                            }
-                          }}
-                          onDateChange={(date) => {
-                            setFormData({ ...formData, wedding_date: date })
-                            if (touched.wedding_date) {
-                              validateStep()
-                            }
-                          }}
-                          onBlur={() => handleBlur('wedding_date')}
-                          placeholder="Select your wedding date"
-                          min={weddingMinDate}
-                          max={weddingMaxDate}
-                          error={touched.wedding_date ? !!errors.wedding_date : undefined}
-                          helperText={touched.wedding_date && errors.wedding_date ? errors.wedding_date : undefined}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          Is your partner using this app?
-                        </label>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          If yes, we'll send them an invitation to connect. If no, you can still use the app independently.
-                        </p>
-                        <div className="flex gap-3">
-                          <Button
-                            variant={formData.partner_using_app === true ? 'primary' : 'outline'}
-                            onClick={() => {
-                              setFormData({ ...formData, partner_using_app: true })
-                              if (touched.partner_email) {
-                                validateStep()
-                              }
-                            }}
-                            className="flex-1"
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            variant={formData.partner_using_app === false ? 'primary' : 'outline'}
-                            onClick={() => {
-                              setFormData({ ...formData, partner_using_app: false, partner_email: '' })
-                              setErrors({ ...errors, partner_email: '' })
-                            }}
-                            className="flex-1"
-                          >
-                            No
-                          </Button>
-                        </div>
-                      </div>
-
-                      {formData.partner_using_app === true && (
-                        <AnimatePresence>
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Input
-                              label="Partner Email (Required)"
-                              type="email"
-                              value={formData.partner_email}
-                              onChange={(e) => {
-                                setFormData({ ...formData, partner_email: e.target.value })
-                                if (touched.partner_email) {
-                                  validateStep()
-                                }
-                              }}
-                              onBlur={() => handleBlur('partner_email')}
-                              placeholder="Enter your partner's email"
-                              error={touched.partner_email ? errors.partner_email : undefined}
-                              hint="We'll send them an invitation email to connect with you on the app."
-                              leftIcon={<Mail className="h-4 w-4" />}
-                              aria-invalid={touched.partner_email && !!errors.partner_email}
-                            />
-                            {touched.partner_email && !errors.partner_email && formData.partner_email && (
-                              <motion.p
-                                key="success"
-                                initial={{ opacity: 0, y: -5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -5 }}
-                                transition={{ duration: 0.2 }}
-                                id="partner_email-success"
-                                className="text-xs sm:text-sm text-success font-medium mt-1.5 px-1"
-                                aria-live="polite"
-                              >
-                                ✓ Valid email address
-                              </motion.p>
-                            )}
-                          </motion.div>
-                        </AnimatePresence>
-                      )}
-
-                      <div className="pt-4 flex gap-3">
-                        <Button
-                          onClick={handleBack}
-                          variant="outline"
-                          className="flex-1"
-                          size="sm"
-                          leftIcon={<ArrowLeft className="h-4 w-4" />}
-                        >
-                          Back
-                        </Button>
-                        <Button
-                          onClick={handleComplete}
-                          className="flex-1"
-                          size="sm"
-                          isLoading={isLoading}
-                          rightIcon={<Sparkles className="h-4 w-4" />}
-                        >
-                          Complete
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <RelationshipStep
+                    formData={formData}
+                    errors={errors}
+                    touched={touched}
+                    onFieldChange={handleFieldChange}
+                    onFieldBlur={handleBlur}
+                    onNext={handleComplete}
+                    onBack={handleBack}
+                    isLoading={isLoading}
+                    weddingDateConstraints={{ min: weddingMinDate, max: weddingMaxDate }}
+                    validateField={validateField}
+                  />
                 )}
               </AnimatePresence>
             </CardContent>

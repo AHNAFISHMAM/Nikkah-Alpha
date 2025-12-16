@@ -239,11 +239,11 @@ export default function ModuleDetailPage() {
         setInitialNotes('')
       }
 
-      // Sort modules by order_index
+      // Sort modules by sort_order
       const sortedModules =
         allModules?.sort((a, b) => {
-          const aIndex = a?.order_index ?? 999
-          const bIndex = b?.order_index ?? 999
+          const aIndex = a?.sort_order ?? 999
+          const bIndex = b?.sort_order ?? 999
           return aIndex - bIndex
         }) || []
 
@@ -388,9 +388,9 @@ export default function ModuleDetailPage() {
   )
 
   const moduleMetadata = useMemo(() => {
-    if (!module || module.order_index === undefined || module.order_index === null) return null
+    if (!module || module.sort_order === undefined || module.sort_order === null) return null
     return (
-      MODULE_METADATA[module.order_index.toString()] || {
+      MODULE_METADATA[module.sort_order.toString()] || {
         estimatedTime: '45-60 minutes',
         learningObjectives: [],
         keyTakeaways: [],
@@ -551,7 +551,7 @@ export default function ModuleDetailPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <BookOpen className="h-4 w-4" />
-                <span>Module {module.order_index}</span>
+                <span>Module {module.sort_order}</span>
               </motion.div>
             </motion.div>
           )}

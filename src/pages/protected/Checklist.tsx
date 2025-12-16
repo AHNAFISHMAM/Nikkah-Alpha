@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '../../components/SEO'
 import { PAGE_SEO } from '../../lib/seo'
@@ -52,7 +52,7 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, y: 0 },
 } as const
 
-export function Checklist() {
+function ChecklistComponent() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -229,7 +229,7 @@ export function Checklist() {
     },
   })
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = useCallback((categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev)
       if (next.has(categoryId)) {
@@ -239,7 +239,7 @@ export function Checklist() {
       }
       return next
     })
-  }
+  }, [])
 
   // Use safe defaults while loading - memoized
   const displayCategories = useMemo(() => categories || [], [categories])
@@ -678,3 +678,5 @@ export function Checklist() {
     </>
   )
 }
+
+export const Checklist = memo(ChecklistComponent)

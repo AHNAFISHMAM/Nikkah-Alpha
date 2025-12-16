@@ -67,8 +67,8 @@ export function useRealtimePartnerConnection() {
           if (!isMountedRef.current) return
           
           // Check if this couple record is relevant to the current user
-          const newData = payload.new as any
-          const oldData = payload.old as any
+          const newData = payload.new as { user1_id?: string; user2_id?: string } | null
+          const oldData = payload.old as { user1_id?: string; user2_id?: string } | null
           const couple = newData || oldData
           
           if (couple && (

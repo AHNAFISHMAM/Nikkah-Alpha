@@ -19,7 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { cn } from '../../lib/utils'
-import type { ChecklistCategory, ChecklistItem } from '../../types/database'
+import type { ChecklistCategory, ChecklistItem, Database } from '../../types/database'
 
 interface CategoryWithItems extends ChecklistCategory {
   checklist_items: ChecklistItem[]
@@ -137,7 +137,7 @@ export function ChecklistManager() {
       } else {
         const { error } = await supabase
           .from('checklist_categories')
-          .insert(data as any)
+          .insert(data as Database['public']['Tables']['checklist_categories']['Insert'])
 
         if (error) throw error
       }
@@ -162,14 +162,14 @@ export function ChecklistManager() {
       if (data.id) {
         const { error } = await supabase
           .from('checklist_items')
-          .update(data as any)
+          .update(data as Database['public']['Tables']['checklist_items']['Update'])
           .eq('id', data.id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('checklist_items')
-          .insert(data as any)
+          .insert(data as Database['public']['Tables']['checklist_items']['Insert'])
 
         if (error) throw error
       }

@@ -26,7 +26,7 @@ interface PromptFormData {
   title: string
   description: string
   category: string
-  order_index: number
+  sort_order: number
 }
 
 const DISCUSSION_CATEGORIES = [
@@ -55,7 +55,7 @@ export function DiscussionsManager() {
     title: '',
     description: '',
     category: '',
-    order_index: 0,
+    sort_order: 0,
   })
 
       const { data: prompts, isLoading } = useQuery({
@@ -67,7 +67,7 @@ export function DiscussionsManager() {
       const { data, error } = await supabase
         .from('discussion_prompts')
         .select('*')
-        .order('order_index')
+        .order('sort_order')
 
       if (error) throw error
       return data as DiscussionPrompt[]
@@ -108,7 +108,7 @@ export function DiscussionsManager() {
             title: data.title,
             description: data.description || null,
             category: data.category,
-            order_index: data.order_index,
+            sort_order: data.sort_order,
           } as any)
           .eq('id', data.id)
 
@@ -120,7 +120,7 @@ export function DiscussionsManager() {
             title: data.title,
             description: data.description || null,
             category: data.category,
-            order_index: data.order_index,
+            sort_order: data.sort_order,
           } as any)
 
         if (error) throw error
@@ -145,7 +145,7 @@ export function DiscussionsManager() {
       title: prompt.title,
       description: prompt.description || '',
       category: prompt.category,
-      order_index: (prompt as any).order_index || 0,
+      sort_order: prompt.sort_order || 0,
     })
     setShowPromptForm(true)
   }
@@ -237,7 +237,7 @@ export function DiscussionsManager() {
                   </h2>
                   <div className="space-y-3">
                     {categoryPrompts
-                      .sort((a, b) => ((a as any).order_index || 0) - ((b as any).order_index || 0))
+                      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
                       .map((prompt) => (
                         <Card key={prompt.id}>
                           <CardContent className="p-4">
@@ -245,7 +245,7 @@ export function DiscussionsManager() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start gap-3">
                                   <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded mt-0.5 whitespace-nowrap">
-                                    #{(prompt as any).order_index || 0}
+                                    #{prompt.sort_order || 0}
                                   </span>
                                   <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-foreground mb-1">
@@ -378,8 +378,8 @@ export function DiscussionsManager() {
               <Input
                 label="Order Index"
                 type="number"
-                value={promptForm.order_index}
-                onChange={(e) => setPromptForm({ ...promptForm, order_index: parseInt(e.target.value) || 0 })}
+                value={promptForm.sort_order}
+                onChange={(e) => setPromptForm({ ...promptForm, sort_order: parseInt(e.target.value) || 0 })}
                 placeholder="0"
                 min="0"
               />

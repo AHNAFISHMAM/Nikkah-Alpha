@@ -24,7 +24,7 @@ export function useCleanupExpiredInvitations() {
         queryClient.invalidateQueries({ queryKey: ['partner-invitations'] })
       } catch (error) {
         // Silently fail - cleanup is not critical
-        console.warn('Failed to cleanup expired invitations:', error)
+        logWarning('Failed to cleanup expired invitations', 'useCleanupExpiredInvitations')
       }
     }
 

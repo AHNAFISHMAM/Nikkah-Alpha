@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, memo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { SEO } from '../../components/SEO'
@@ -90,7 +90,7 @@ const ITEM_VARIANTS = {
   },
 } as const
 
-export function Dashboard() {
+function DashboardComponent() {
   const { profile, user } = useAuth()
   const { data: stats, isLoading: statsLoading } = useProgressStats(user?.id)
   const { data: pendingTasks, isLoading: tasksLoading } = usePendingTasks(user?.id)
@@ -360,3 +360,5 @@ export function Dashboard() {
     </>
   )
 }
+
+export const Dashboard = memo(DashboardComponent)
