@@ -371,7 +371,83 @@ export function useToggleFavorite() {
 }
 ```
 
-### Step 3.3: Mutation with Multiple Cache Updates
+### Step 3.3: When to Use Optimistic Updates
+
+**Always Use Optimistic Updates For:**
+- Toggle actions (favorite, like, complete)
+- Quick actions (mark as read, delete)
+- User-initiated changes (profile updates, settings)
+- Actions with high success probability
+
+**Example: Profile Update with Optimistic Update**
+```typescript
+export function useUpdateProfile() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (updates: ProfileUpdate): Promise<Profile> => {
+      if (!user?.id) throw new Error('User not authenticated')
+      if (!supabase) throw new Error('Supabase is not configured')
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single()
+
+      if (error) {
+        logError(error, 'useUpdateProfile')
+        throw error
+      }
+
+      return data as Profile
+    },
+    onMutate: async (updates) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['profile', user?.id] })
+
+      // Snapshot previous value
+      const previousProfile = queryClient.getQueryData(['profile', user?.id])
+
+      // Optimistically update
+      if (user?.id && previousProfile) {
+        queryClient.setQueryData(['profile', user.id], (old: Profile) => ({
+          ...old,
+          ...updates,
+        }))
+      }
+
+      return { previousProfile }
+    },
+    onError: (error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousProfile && user?.id) {
+        queryClient.setQueryData(['profile', user.id], context.previousProfile)
+      }
+      toast.error(getUserFriendlyError(error))
+    },
+    onSuccess: (data) => {
+      // Update with server response
+      if (user?.id) {
+        queryClient.setQueryData(['profile', user.id], data)
+      }
+      toast.success('Profile updated!')
+    },
+  })
+}
+```
+
+**Optimistic Update Checklist:**
+- [ ] `onMutate` cancels outgoing queries
+- [ ] `onMutate` snapshots previous state
+- [ ] `onMutate` optimistically updates cache
+- [ ] `onError` rolls back on failure
+- [ ] `onSuccess` updates with server response
+- [ ] Error handling with user-friendly messages
+
+### Step 3.4: Mutation with Multiple Cache Updates
 ```typescript
 export function useUpdateWeddingBudget() {
   const { user } = useAuth()
@@ -416,7 +492,7 @@ export function useUpdateWeddingBudget() {
 }
 ```
 
-### Step 3.4: Mutation Best Practices
+### Step 3.5: Mutation Best Practices
 
 #### ✅ DO:
 - Update cache on success
@@ -433,7 +509,7 @@ export function useUpdateWeddingBudget() {
 - Invalidate too many queries (performance impact)
 - Show technical error messages to users
 
-### Step 3.5: Mutation Checklist
+### Step 3.6: Mutation Checklist
 - [ ] Error handling implemented
 - [ ] Cache updated on success
 - [ ] Related queries invalidated

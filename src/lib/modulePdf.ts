@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import { logError, logDebug } from './logger'
 
 /**
@@ -136,7 +137,7 @@ export async function generateModulePDF(
 
       try {
         const tmp = document.createElement('DIV')
-        tmp.innerHTML = html
+        tmp.innerHTML = DOMPurify.sanitize(html)
         return tmp.textContent || tmp.innerText || ''
       } catch {
         return html
@@ -157,7 +158,7 @@ export async function generateModulePDF(
       if (typeof document === 'undefined') return []
       try {
         const tmp = document.createElement('DIV')
-        tmp.innerHTML = html
+        tmp.innerHTML = DOMPurify.sanitize(html)
         const arabicElements = tmp.querySelectorAll(
           '.arabic[dir="rtl"], p.arabic[dir="rtl"]'
         )

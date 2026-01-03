@@ -97,11 +97,112 @@ function App() {
 }
 ```
 
-### Step 2.3: Performance Checklist
+### Step 2.3: Virtual Scrolling for Long Lists
+```typescript
+// ✅ CORRECT - Use virtual scrolling for lists >20 items
+import { useVirtualizer } from '@tanstack/react-virtual'
+
+function LongList({ items }: { items: Item[] }) {
+  const parentRef = useRef<HTMLDivElement>(null)
+  
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60, // Estimated item height
+    overscan: 5, // Render 5 extra items outside viewport
+  })
+
+  return (
+    <div ref={parentRef} className="h-[400px] overflow-auto">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualItem.size}px`,
+              transform: `translateY(${virtualItem.start}px)`,
+            }}
+          >
+            {items[virtualItem.index]}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+**When to Use Virtual Scrolling:**
+- Lists with >20 items
+- Long scrollable content (Discussions, Resources, Modules, Checklist)
+- Performance issues with rendering many DOM nodes
+- Mobile devices with limited memory
+
+**Installation:**
+```bash
+npm install @tanstack/react-virtual
+```
+
+### Step 2.4: Route-Based Code Splitting
+```typescript
+// ✅ CORRECT - Lazy load route components
+import { lazy, Suspense } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { PageLoader } from '../components/common/PageLoader'
+
+// Lazy load all route components
+const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
+const Checklist = lazy(() => import('../pages/protected/Checklist'))
+const Financial = lazy(() => import('../pages/protected/Financial'))
+const Discussions = lazy(() => import('../pages/protected/Discussions'))
+const Resources = lazy(() => import('../pages/protected/Resources'))
+const Profile = lazy(() => import('../pages/protected/Profile'))
+const Modules = lazy(() => import('../pages/public/Modules'))
+
+function AppRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/checklist" element={<Checklist />} />
+        <Route path="/financial" element={<Financial />} />
+        <Route path="/discussions" element={<Discussions />} />
+        <Route path="/resources" element={<Resources />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/modules" element={<Modules />} />
+      </Routes>
+    </Suspense>
+  )
+}
+```
+
+**Benefits:**
+- Smaller initial bundle size
+- Faster Time to Interactive (TTI)
+- Better Core Web Vitals scores
+- Improved mobile performance
+
+**Best Practices:**
+- Lazy load all route components
+- Use consistent loading fallback
+- Preload critical routes on hover/focus
+
+### Step 2.5: Performance Checklist
 - [ ] Components memoized where appropriate
 - [ ] Expensive computations memoized
 - [ ] Callbacks memoized
 - [ ] Code split by route
+- [ ] Virtual scrolling for lists >20 items
 - [ ] Images optimized
 - [ ] Bundle size optimized
 - [ ] Core Web Vitals meet targets
@@ -135,6 +236,7 @@ Performance optimization is complete when:
 - Monitor bundle size
 - Optimize images
 - Code split by route
+- Use virtual scrolling for long lists
 
 ---
 

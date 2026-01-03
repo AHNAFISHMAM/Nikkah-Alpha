@@ -252,7 +252,57 @@ const elementRef = React.useRef<HTMLDivElement>(null)
 >
 ```
 
-#### E. **TypeScript Best Practices**
+#### E. **WCAG 2.1/2.2 Compliance**
+```typescript
+// ✅ CORRECT - WCAG AA compliance
+// Color contrast: 4.5:1 for text, 3:1 for UI components
+// Use WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
+
+// Text contrast example
+className="text-foreground" // Must have 4.5:1 contrast with background
+
+// UI component contrast example
+className="bg-primary text-primary-foreground" // Must have 3:1 contrast
+
+// ✅ CORRECT - Reduced motion support
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+<motion.div
+  animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
+>
+  {children}
+</motion.div>
+
+// ✅ CORRECT - CSS reduced motion
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+**WCAG Compliance Checklist:**
+- [ ] Color contrast: 4.5:1 for text, 3:1 for UI
+- [ ] Keyboard navigation for all interactive elements
+- [ ] Focus indicators visible (2px outline minimum)
+- [ ] ARIA labels for icon-only buttons
+- [ ] Screen reader announcements for dynamic content
+- [ ] Proper heading hierarchy (h1 → h2 → h3)
+- [ ] Alt text for all images
+- [ ] Form labels associated with inputs
+- [ ] Error messages accessible to screen readers
+- [ ] Reduced motion support for animations
+
+**Reduced Motion Implementation:**
+- [ ] Check `prefers-reduced-motion` media query
+- [ ] Disable or simplify animations when motion is reduced
+- [ ] Use CSS `@media (prefers-reduced-motion: reduce)`
+- [ ] Test with system preference enabled
+
+#### F. **TypeScript Best Practices**
 ```typescript
 // ✅ CORRECT - Proper typing
 export interface ComponentProps extends Omit<HTMLDivElement, 'children'> {
@@ -309,10 +359,12 @@ export interface ComponentProps extends Omit<HTMLDivElement, 'children'> {
 - [ ] Keyboard navigation
 - [ ] Focus management
 - [ ] Screen reader support
-- [ ] Color contrast compliant
+- [ ] Color contrast compliant (WCAG AA: 4.5:1 text, 3:1 UI)
 - [ ] Touch targets ≥ 44px
 - [ ] No keyboard traps
 - [ ] Proper heading hierarchy
+- [ ] Reduced motion support
+- [ ] WCAG 2.1/2.2 AA compliance verified
 
 #### Responsive Design
 - [ ] Works on 320px viewport

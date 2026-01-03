@@ -66,16 +66,78 @@ type ProfileWithoutId = Omit<Profile, 'id'>
 
 ### Step 2.2: Type Guards
 ```typescript
-// ✅ CORRECT - Type guard
+// ✅ CORRECT - Type guard for Profile
 function isProfile(obj: unknown): obj is Profile {
   return (
     typeof obj === 'object' &&
     obj !== null &&
     'id' in obj &&
-    'email' in obj
+    typeof (obj as any).id === 'string' &&
+    'email' in obj &&
+    typeof (obj as any).email === 'string'
   )
 }
+
+// ✅ CORRECT - Type guard for User
+function isUser(obj: unknown): obj is User {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    typeof (obj as any).id === 'string' &&
+    'email' in obj &&
+    typeof (obj as any).email === 'string'
+  )
+}
+
+// ✅ CORRECT - Type guard for array of items
+function isArrayOf<T>(
+  arr: unknown,
+  guard: (item: unknown) => item is T
+): arr is T[] {
+  return Array.isArray(arr) && arr.every(guard)
+}
+
+// ✅ CORRECT - Usage in components
+function ProfileComponent({ data }: { data: unknown }) {
+  if (!isProfile(data)) {
+    return <div>Invalid profile data</div>
+  }
+  
+  // TypeScript now knows data is Profile
+  return <div>{data.first_name}</div>
+}
+
+// ✅ CORRECT - Usage with database responses
+const { data, error } = await supabase.from('profiles').select('*').single()
+
+if (error || !data) {
+  // Handle error
+  return
+}
+
+// Type guard ensures runtime safety
+if (!isProfile(data)) {
+  logError('Invalid profile data received', undefined, 'ProfileComponent')
+  return
+}
+
+// Now TypeScript knows data is Profile
+const profile: Profile = data
 ```
+
+**When to Use Type Guards:**
+- Validating API responses
+- Runtime type checking for external data
+- Validating user input
+- Type narrowing in conditional blocks
+- Database query results validation
+
+**Common Type Guard Patterns:**
+- Single object validation
+- Array validation
+- Discriminated union validation
+- Nested object validation
 
 ### Step 2.3: Type Checklist
 - [ ] Strict mode enabled

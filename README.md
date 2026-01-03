@@ -35,8 +35,7 @@ A comprehensive web application to help couples prepare for marriage through gui
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+# Navigate to project directory
 cd "Nikkah Alpha"
 
 # Install dependencies
@@ -167,8 +166,8 @@ vercel --prod
 
 ## License
 
-[Your License Here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-For issues and questions, please [open an issue](your-repo-url/issues).
+For support and questions, please contact the development team or refer to the documentation in the `docs/` directory.

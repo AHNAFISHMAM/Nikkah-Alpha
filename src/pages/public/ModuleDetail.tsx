@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, Link, useNavigate, useBlocker } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import DOMPurify from 'dompurify'
 import { SEO } from '../../components/SEO'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -750,7 +751,7 @@ export default function ModuleDetailPage() {
                     <div
                       className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-semibold prose-p:leading-relaxed prose-ul:my-4 prose-ol:my-4"
                       dangerouslySetInnerHTML={{
-                        __html: sectionHtml || 'No content available.',
+                        __html: DOMPurify.sanitize(sectionHtml || 'No content available.'),
                       }}
                     />
                   </motion.div>
@@ -1169,7 +1170,7 @@ export default function ModuleDetailPage() {
             <h2 className="worksheet-section-title">Module Content</h2>
             <div
               className="text-sm prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: module.content || 'No content available.' }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(module.content || 'No content available.') }}
             />
           </div>
 

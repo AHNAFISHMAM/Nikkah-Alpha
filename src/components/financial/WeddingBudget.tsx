@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useMemo, useCallback } from 'react'
+import { memo, useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -6,7 +6,8 @@ import { Label } from '../ui/Label'
 import { Progress } from '../ui/Progress'
 import { CurrencyInput } from './CurrencyInput'
 import { EditViewToggle } from './EditViewToggle'
-import { MobileBarChart } from './MobileBarChart'
+
+const MobileBarChart = lazy(() => import('./MobileBarChart').then(m => ({ default: m.MobileBarChart })))
 import { ChartContainer } from './ChartContainer'
 import { ChartModal } from './ChartModal'
 import { ExpenseSummaryCards } from './ExpenseSummaryCards'
@@ -432,13 +433,15 @@ export const WeddingBudget = memo(function WeddingBudget() {
                   <>
                     <h3 className="text-base sm:text-lg font-semibold text-foreground">Budget vs Spent</h3>
                     <ChartContainer minWidth={320}>
-                      <MobileBarChart
-                        data={barChartData}
-                        dataKeys={[
-                          { key: 'Planned', name: 'Planned', color: '#8B5CF6' },
-                          { key: 'Spent', name: 'Spent', color: '#FBD07C' },
-                        ]}
-                      />
+                      <Suspense fallback={<div className="flex items-center justify-center h-64">Loading chart...</div>}>
+                        <MobileBarChart
+                          data={barChartData}
+                          dataKeys={[
+                            { key: 'Planned', name: 'Planned', color: '#8B5CF6' },
+                            { key: 'Spent', name: 'Spent', color: '#FBD07C' },
+                          ]}
+                        />
+                      </Suspense>
                     </ChartContainer>
                   </>
                 )}
@@ -454,14 +457,16 @@ export const WeddingBudget = memo(function WeddingBudget() {
             >
               <div className="w-full flex flex-col items-center justify-center" style={{ minHeight: '500px' }}>
                 <ChartContainer minWidth={320}>
-                  <MobileBarChart
-                    data={barChartData}
-                    dataKeys={[
-                      { key: 'Planned', name: 'Planned', color: '#8B5CF6' },
-                      { key: 'Spent', name: 'Spent', color: '#FBD07C' },
-                    ]}
-                    height={450}
-                  />
+                  <Suspense fallback={<div className="flex items-center justify-center h-64">Loading chart...</div>}>
+                    <MobileBarChart
+                      data={barChartData}
+                      dataKeys={[
+                        { key: 'Planned', name: 'Planned', color: '#8B5CF6' },
+                        { key: 'Spent', name: 'Spent', color: '#FBD07C' },
+                      ]}
+                      height={450}
+                    />
+                  </Suspense>
                 </ChartContainer>
               </div>
             </ChartModal>
