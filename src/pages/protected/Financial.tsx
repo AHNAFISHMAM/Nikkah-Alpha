@@ -38,7 +38,7 @@ const TABS: Array<{ id: TabType; label: string; icon: typeof Wallet }> = [
   { id: 'savings', label: 'Savings', icon: Coins },
 ]
 
-function FinancialComponent() {
+export function Financial() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') as TabType | null
   // Memoize initial tab calculation

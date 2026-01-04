@@ -38,7 +38,7 @@ export function PersonalStep({
   }
 
   const handleGenderChange = (value: string) => {
-    const genderValue = value as 'male' | 'female' | 'prefer_not_to_say'
+    const genderValue = value as 'male' | 'female'
     onFieldChange('gender', genderValue)
     onFieldBlur('gender')
   }
@@ -125,8 +125,7 @@ export function PersonalStep({
             onChange={handleGenderChange}
             options={[
               { value: 'male', label: 'Male' },
-              { value: 'female', label: 'Female' },
-              { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+              { value: 'female', label: 'Female' }
             ]}
             placeholder="Select your gender"
             className="w-full"

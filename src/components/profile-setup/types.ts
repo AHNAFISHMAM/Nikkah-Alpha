@@ -4,7 +4,7 @@ export interface ProfileFormData {
   first_name: string
   last_name: string
   date_of_birth: string
-  gender: 'male' | 'female' | 'prefer_not_to_say' | ''
+  gender: 'male' | 'female' | ''
   marital_status: 'Single' | 'Engaged' | 'Researching' | ''
   country: string
   city: string

@@ -84,7 +84,7 @@ export function ProfileSetup() {
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
     date_of_birth: profile?.date_of_birth || '',
-    gender: (profile?.gender as 'male' | 'female' | 'prefer_not_to_say') || '',
+    gender: (profile?.gender as 'male' | 'female') || '',
     marital_status: (profile?.marital_status as 'Single' | 'Engaged' | 'Researching') || '',
     country: profile?.country || '',
     city: profile?.city || '',
@@ -585,8 +585,22 @@ export function ProfileSetup() {
       
       let { error } = await withTimeout(updatePromise, 10000, 'Profile update timeout')
 
-      // If update fails (profile doesn't exist), try insert
-      if (error) {
+      // Check if update error is a 409 conflict - try upsert directly
+      if (error && (error.code === '23505' || error.status === 409 || error.message?.includes('409') || error.message?.includes('Conflict'))) {
+        const upsertPromise = (async () => {
+          const result = await supabase
+            .from('profiles')
+            // @ts-expect-error - Supabase type inference issue with Database types
+            .upsert(profileData, { onConflict: 'id', ignoreDuplicates: false })
+          return result
+        })()
+        
+        const { error: upsertError } = await withTimeout(upsertPromise, 10000, 'Profile upsert timeout')
+        if (upsertError) {
+          throw new Error(upsertError.message || 'Failed to save profile. Please try again.')
+        }
+      } else if (error) {
+        // If update fails (profile doesn't exist), try insert
         const insertPromise = (async () => {
           const result = await supabase
             .from('profiles')
@@ -599,7 +613,7 @@ export function ProfileSetup() {
         
         if (insertError) {
           // If insert also fails with conflict, try upsert as last resort
-          if (insertError.code === '23505' || insertError.message?.includes('409') || insertError.message?.includes('Conflict')) {
+          if (insertError.code === '23505' || insertError.status === 409 || insertError.message?.includes('409') || insertError.message?.includes('Conflict')) {
             const upsertPromise = (async () => {
               const result = await supabase
                 .from('profiles')
@@ -610,10 +624,10 @@ export function ProfileSetup() {
             
             const { error: upsertError } = await withTimeout(upsertPromise, 10000, 'Profile upsert timeout')
             if (upsertError) {
-              throw new Error(upsertError.message || 'Failed to save profile')
+              throw new Error(upsertError.message || 'Failed to save profile. Please try again.')
             }
           } else {
-            throw new Error(insertError.message || 'Failed to save profile')
+            throw new Error(insertError.message || 'Failed to save profile. Please try again.')
           }
         }
       }

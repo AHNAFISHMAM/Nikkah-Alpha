@@ -34,6 +34,10 @@ const ERROR_MAP: Record<string, Omit<ErrorInfo, 'message' | 'code' | 'status'>> 
     userMessage: 'The requested resource was not found.',
     retryable: false,
   },
+  '409': {
+    userMessage: 'This information already exists. Please refresh the page or try again.',
+    retryable: true,
+  },
   '500': {
     userMessage: 'Server error. Please try again later.',
     retryable: true,
